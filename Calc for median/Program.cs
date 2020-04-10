@@ -340,7 +340,7 @@ namespace WindowsFormsApp1
                 Name.Top = 425;
                 Name.Left = 270;
                 Name.Width = 170;
-                Name.Text = "Виконав Ярослав Рибак ПМ-31";
+                Name.Text = "Виконав: Ярослав Рибак ПМ-31";
                 Controls.Add(Name);
             }
             else
