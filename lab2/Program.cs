@@ -61,12 +61,13 @@ namespace lab2
     }
     class MyForm : Form
     {
-        SolidBrush brush;
-        RectangleF rect;
+        private readonly SolidBrush[] brush = new SolidBrush[2];
+        private readonly RectangleF[] rect = new RectangleF[2];
         Panel panel;
         Graphics graphics;
         BufferedGraphicsContext bufferedGraphicsContext;
         BufferedGraphics bufferedGraphics;
+
         //
         static Ball[] Balls = new Ball[2];
         int down = 245;
@@ -92,7 +93,6 @@ namespace lab2
         private readonly Button[] drawBall = new Button[2];
         private readonly Button[] HideBall = new Button[2];
         Timer t1 = new Timer();
-        int currentBall = 0;
         int Ballcount = 0;
         //static List<Ball> Balls = new List<Ball>(2);
         [STAThread]
@@ -102,13 +102,7 @@ namespace lab2
             Application.SetCompatibleTextRenderingDefault(false);
             Application.Run(new MyForm());
         }
-        public void Draw()
-        {
-            rect = new RectangleF((float)(Balls[0].Pos.X), (float)(Balls[0].Pos.Y), (float)Balls[0].Diameter, (float)Balls[0].Diameter);
-            brush = new SolidBrush(Balls[0].color);
-            DrawToBuffer();
 
-        }
         private void InitializeGraphics()
         {
             graphics = panel.CreateGraphics();
@@ -119,7 +113,8 @@ namespace lab2
         {
             bufferedGraphics.Graphics.Clear(BackColor);
 
-            bufferedGraphics.Graphics.FillEllipse(brush, rect);
+            bufferedGraphics.Graphics.FillEllipse(brush[0], rect[0]);
+            bufferedGraphics.Graphics.FillEllipse(brush[1], rect[1]);
 
             bufferedGraphics.Render();
         }
@@ -168,6 +163,9 @@ namespace lab2
                 Font = new Font("Arial",8, FontStyle.Italic)
             };
             Controls.Add(Name);
+
+            t1.Enabled = true;
+            t1.Interval = (int)20D;
             Balls[0] = new Ball();
             Balls[1] = new Ball();
             Go.Click += new EventHandler(OnClickGo);
@@ -189,42 +187,73 @@ namespace lab2
             DirectionY[0] = new NumericUpDown();
             DirectionX[1] = new NumericUpDown();
             DirectionY[1] = new NumericUpDown();
+            brush[0] = new SolidBrush(Color.FromArgb(240,240,240));
+            brush[1] = new SolidBrush(Color.FromArgb(240, 240, 240));
+            rect[0] = new RectangleF(20, 20, 0, 0);
+            rect[1] = new RectangleF(20, 20, 0, 0);
 
-           
 
         }
         private void OnClickGo(object sender, EventArgs e)
         {
+            if ((sender as Button).Text == "Go")
+            {
+                (sender as Button).Text = "Stop";
 
-            t1.Enabled = true;
-            t1.Interval = (int)20D;
-            t1.Start();
-            t1.Tick += new EventHandler(OnTimer1);
-
+                t1.Start();
+                t1.Tick += new EventHandler(OnTimer1);
+            }
+            else
+            {
+                (sender as Button).Text = "Go";
+                t1.Stop();
+            }
         }
         private void OnTimer1(object sender, EventArgs e)
         {
-            if (rect.Bottom >= panel.Bottom-20 && Balls[0].Velocity.Y > 0)
+            if (rect[0].Bottom >= panel.Bottom-20 && Balls[0].Velocity.Y > 0)
             {
                 Balls[0].CollideWall(new Wall { WallNumber = 1 });
             }
-            else if(rect.Top<= panel.Top-20 && Balls[0].Velocity.Y < 0)
+            else if(rect[0].Top<= panel.Top-20 && Balls[0].Velocity.Y < 0)
             {
                 Balls[0].CollideWall(new Wall { WallNumber = 2 });
             }
-            else if(rect.Right >= panel.Right-20 && Balls[0].Velocity.X > 0)
+            else if(rect[0].Right >= panel.Right-20 && Balls[0].Velocity.X > 0)
             {
                 Balls[0].CollideWall(new Wall { WallNumber = 3 });
             }
-            else if(rect.Left  <= panel.Left-20 && Balls[0].Velocity.X < 0)
+            else if(rect[0].Left  <= panel.Left-20 && Balls[0].Velocity.X < 0)
             {
                 Balls[0].CollideWall(new Wall { WallNumber = 4 });
             }
-            //Draw();
            
             Balls[0].Pos.X += Balls[0].Velocity.X;
             Balls[0].Pos.Y += Balls[0].Velocity.Y;
-            rect.Offset((float)Balls[0].Velocity.X,(float)Balls[0].Velocity.Y);
+            rect[0].Offset((float)Balls[0].Velocity.X,(float)Balls[0].Velocity.Y);
+            if(brush[0].Color != Color.FromArgb(240,240,240))
+            {
+                if (rect[1].Bottom >= panel.Bottom - 20 && Balls[1].Velocity.Y > 0)
+                {
+                    Balls[1].CollideWall(new Wall { WallNumber = 1 });
+                }
+                else if (rect[1].Top <= panel.Top - 20 && Balls[1].Velocity.Y < 0)
+                {
+                    Balls[1].CollideWall(new Wall { WallNumber = 2 });
+                }
+                else if (rect[1].Right >= panel.Right - 20 && Balls[1].Velocity.X > 0)
+                {
+                    Balls[1].CollideWall(new Wall { WallNumber = 3 });
+                }
+                else if (rect[1].Left <= panel.Left - 20 && Balls[1].Velocity.X < 0)
+                {
+                    Balls[1].CollideWall(new Wall { WallNumber = 4 });
+                }
+
+                Balls[1].Pos.X += Balls[1].Velocity.X;
+                Balls[1].Pos.Y += Balls[1].Velocity.Y;
+                rect[1].Offset((float)Balls[1].Velocity.X, (float)Balls[1].Velocity.Y);
+            }
             DrawToBuffer();
 
         }
@@ -399,7 +428,7 @@ namespace lab2
             Controls.Add(DirectionY[0]);
             Controls.Add(drawBall[0]);
             Controls.Add(HideBall[0]);
-            drawBall[0].Click += new EventHandler(OnDrawClick);
+            drawBall[0].Click += new EventHandler(OnDrawClick0);
             if(Ballcount == 1)
             {
                 Balltxt = new TextBox
@@ -567,7 +596,9 @@ namespace lab2
                 Controls.Add(DirectionY[1]);
                 Controls.Add(drawBall[1]);
                 Controls.Add(HideBall[1]);
+                drawBall[1].Click += new EventHandler(OnDrawClick1);
             }
+           
             ColorsBox[0].SelectedIndexChanged += (s, ea) =>
             {
                 
@@ -614,6 +645,56 @@ namespace lab2
                         break;
                     default:
                         Balls[0].color = Color.Red;
+                        break;
+                }
+            };
+            ColorsBox[1].SelectedIndexChanged += (s, ea) =>
+            {
+
+
+                switch ((s as ComboBox).SelectedItem.ToString())
+                {
+                    case "Red":
+                        Balls[1].color = Color.Red;
+                        break;
+                    case "Orange":
+                        Balls[1].color = Color.Orange;
+                        break;
+                    case "Yellow":
+                        Balls[1].color = Color.Yellow;
+                        break;
+                    case "Green":
+                        Balls[1].color = Color.Green;
+                        break;
+                    case "Cyan":
+                        Balls[1].color = Color.Cyan;
+                        break;
+                    case "Blue":
+                        Balls[1].color = Color.Blue;
+                        break;
+                    case "Violet":
+                        Balls[1].color = Color.Violet;
+                        break;
+                    case "Purple":
+                        Balls[1].color = Color.Purple;
+                        break;
+                    case "Pink":
+                        Balls[1].color = Color.Pink;
+                        break;
+                    case "Brown":
+                        Balls[1].color = Color.Brown;
+                        break;
+                    case "White":
+                        Balls[1].color = Color.White;
+                        break;
+                    case "Gray":
+                        Balls[1].color = Color.Gray;
+                        break;
+                    case "Black":
+                        Balls[1].color = Color.Black;
+                        break;
+                    default:
+                        Balls[1].color = Color.Red;
                         break;
                 }
             };
@@ -675,43 +756,86 @@ namespace lab2
 
         }
 
-
-        private void OnDrawClick(object sender, EventArgs e)
+        private void OnDrawClick1(object sender, EventArgs e)
         {
-            int c = Convert.ToInt32((sender as Button).Name);
-            Balls[c].Pos = new Vector
+            Balls[1].Pos = new Vector
             {
-                X = Convert.ToDouble(xBox[c].Text),
-                Y = Convert.ToDouble(yBox[c].Text)
+                X = Convert.ToDouble(xBox[1].Text),
+                Y = Convert.ToDouble(yBox[1].Text)
             };
-            Balls[c].Diameter = Convert.ToDouble(DiameterBox[c].Text);
-            Balls[c].Mass = Convert.ToDouble(MassBox[c].Text);
-            Balls[c].Velocity = new Vector
+            Balls[1].Diameter = Convert.ToDouble(DiameterBox[1].Text);
+            Balls[1].Mass = Convert.ToDouble(MassBox[1].Text);
+            Balls[1].Velocity = new Vector
             {
-                X = Convert.ToDouble(VelocityBox[c].Text),
-                Y = Convert.ToDouble(VelocityBox[c].Text)
+                X = Convert.ToDouble(VelocityBox[1].Text),
+                Y = Convert.ToDouble(VelocityBox[1].Text)
             };
-            Balls[c].Direction = new Vector
+            Balls[1].Direction = new Vector
             {
-                X = Convert.ToDouble(DirectionX[c].Text),
-                Y = Convert.ToDouble(DirectionY[c].Text)
+                X = Convert.ToDouble(DirectionX[1].Text),
+                Y = Convert.ToDouble(DirectionY[1].Text)
             };
+            rect[1].X = (float)Balls[1].Pos.X;
+            rect[1].Y = (float)Balls[1].Pos.Y;
+            rect[1].Height = (float)Balls[1].Diameter;
+            rect[1].Width = (float)Balls[1].Diameter;
+            brush[1].Color = Balls[1].color;
+            DrawToBuffer();
 
-            currentBall = Convert.ToInt32((sender as Button).Name); 
-                Draw();
-
-            double x1 = (Balls[c].Direction.X - rect.X);
-            double y1 = (Balls[c].Direction.Y - rect.Y);
+            double x1 = (Balls[1].Direction.X - rect[1].X);
+            double y1 = (Balls[1].Direction.Y - rect[1].Y);
             double k = Math.Sqrt(x1 * x1 + y1 * y1);
-            if (Balls[c].Direction.X < rect.X && Balls[c].Direction.Y < rect.Y)
+            if (Balls[1].Direction.X < rect[1].X && Balls[1].Direction.Y < rect[1].Y)
             {
-                Balls[c].Velocity.X = x1 * Balls[c].Velocity.X / k;
-                Balls[c].Velocity.Y = y1 * Balls[c].Velocity.Y / k;
+                Balls[1].Velocity.X = x1 * Balls[1].Velocity.X / k;
+                Balls[1].Velocity.Y = y1 * Balls[1].Velocity.Y / k;
             }
             else
             {
-                Balls[c].Velocity.X = x1 * Balls[c].Velocity.X / k - (Balls[c].Diameter / 2) * Balls[c].Velocity.X / k;
-                Balls[c].Velocity.Y = y1 * Balls[c].Velocity.Y / k - (Balls[c].Diameter / 2) * Balls[c].Velocity.X / k;
+                Balls[1].Velocity.X = x1 * Balls[1].Velocity.X / k - (Balls[1].Diameter / 2) * Balls[1].Velocity.X / k;
+                Balls[1].Velocity.Y = y1 * Balls[1].Velocity.Y / k - (Balls[1].Diameter / 2) * Balls[1].Velocity.X / k;
+            }
+        }
+
+        private void OnDrawClick0(object sender, EventArgs e)
+        {
+            
+            Balls[0].Pos = new Vector
+            {
+                X = Convert.ToDouble(xBox[0].Text),
+                Y = Convert.ToDouble(yBox[0].Text)
+            };
+            Balls[0].Diameter = Convert.ToDouble(DiameterBox[0].Text);
+            Balls[0].Mass = Convert.ToDouble(MassBox[0].Text);
+            Balls[0].Velocity = new Vector
+            {
+                X = Convert.ToDouble(VelocityBox[0].Text),
+                Y = Convert.ToDouble(VelocityBox[0].Text)
+            };
+            Balls[0].Direction = new Vector
+            {
+                X = Convert.ToDouble(DirectionX[0].Text),
+                Y = Convert.ToDouble(DirectionY[0].Text)
+            };
+            rect[0].X = (float)Balls[0].Pos.X;
+            rect[0].Y = (float)Balls[0].Pos.Y;
+            rect[0].Height = (float)Balls[0].Diameter;
+            rect[0].Width = (float)Balls[0].Diameter;
+            brush[0].Color = Balls[0].color;
+            DrawToBuffer();
+
+            double x1 = (Balls[0].Direction.X - rect[0].X);
+            double y1 = (Balls[0].Direction.Y - rect[0].Y);
+            double k = Math.Sqrt(x1 * x1 + y1 * y1);
+            if (Balls[0].Direction.X < rect[0].X && Balls[0].Direction.Y < rect[0].Y)
+            {
+                Balls[0].Velocity.X = x1 * Balls[0].Velocity.X / k;
+                Balls[0].Velocity.Y = y1 * Balls[0].Velocity.Y / k;
+            }
+            else
+            {
+                Balls[0].Velocity.X = x1 * Balls[0].Velocity.X / k - (Balls[0].Diameter / 2) * Balls[0].Velocity.X / k;
+                Balls[0].Velocity.Y = y1 * Balls[0].Velocity.Y / k - (Balls[0].Diameter / 2) * Balls[0].Velocity.X / k;
             }
         }
         public void PaintWall(object obj, PaintEventArgs e)
