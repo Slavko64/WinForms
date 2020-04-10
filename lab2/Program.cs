@@ -32,6 +32,15 @@ namespace lab2
         public Vector Velocity { get; set; }
         public Vector Direction { get; set; }
         public Color color { get; set; }
+        public void CollideBall(Ball b)
+        {
+
+            double alpha = (Velocity.X * b.Velocity.X + Velocity.Y * b.Velocity.Y) / (Math.Sqrt(Math.Pow(Velocity.X, 2) + Math.Pow(Velocity.Y, 2)) * Math.Sqrt(Math.Pow(b.Velocity.X, 2) + Math.Pow(b.Velocity.Y, 2)));
+            Velocity.X *= alpha * 0.9;
+            Velocity.Y *= alpha * 0.9;
+            b.Velocity.X = b.Velocity.X / alpha * 0.9;
+            b.Velocity.Y = b.Velocity.Y / alpha * 0.9;
+        }
         public void CollideWall(Wall w)
         {
             //Velocity.X *= -0.9;
@@ -211,6 +220,14 @@ namespace lab2
         }
         private void OnTimer1(object sender, EventArgs e)
         {
+
+            if (brush[0].Color != Color.FromArgb(240, 240, 240))
+            {
+                if (rect[0].IntersectsWith(rect[1]) == true)
+                {
+                    Balls[0].CollideBall(Balls[1]);
+                }
+            }
             if (rect[0].Bottom >= panel.Bottom-20 && Balls[0].Velocity.Y > 0)
             {
                 Balls[0].CollideWall(new Wall { WallNumber = 1 });
@@ -231,9 +248,11 @@ namespace lab2
             Balls[0].Pos.X += Balls[0].Velocity.X;
             Balls[0].Pos.Y += Balls[0].Velocity.Y;
             rect[0].Offset((float)Balls[0].Velocity.X,(float)Balls[0].Velocity.Y);
+            
             if(brush[0].Color != Color.FromArgb(240,240,240))
             {
-                if (rect[1].Bottom >= panel.Bottom - 20 && Balls[1].Velocity.Y > 0)
+                
+                    if (rect[1].Bottom >= panel.Bottom - 20 && Balls[1].Velocity.Y > 0)
                 {
                     Balls[1].CollideWall(new Wall { WallNumber = 1 });
                 }
