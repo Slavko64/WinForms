@@ -265,6 +265,7 @@ namespace lab2
         }
         private void OnClickGo(object sender, EventArgs e)
         {
+            if (Ballcount == 0) return;
             if ((sender as Button).Text == "Go")
             {
                 (sender as Button).Text = "Stop";
@@ -958,9 +959,10 @@ namespace lab2
             rect[1].Width = 0;
             rect[1].Height = 0;
             brush[1].Color = Color.FromArgb(240, 240, 240);
+            DrawToBuffer();
             Controls.Add(Go);
             Controls.Add(MyName);
-            DrawToBuffer();
+            Controls.Add(panel);
         }
         
         void OnMenuExit(object obj, EventArgs ea)
