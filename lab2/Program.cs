@@ -185,15 +185,15 @@ namespace lab2
             MaximizeBox = false;
             ClientSize = new Size(1000, 600);
             CenterToScreen();
-            MenuItem miNewCalc = new MenuItem("Reset",
+            MenuItem miNewForm = new MenuItem("Reset",
                 new EventHandler(OnMenuStart), Shortcut.F2);
             MenuItem miSeparator = new MenuItem("-");
             MenuItem miAdd = new MenuItem("Add", new EventHandler(OnMenuAdd));
             MenuItem miExit = new MenuItem("Exit",
                 new EventHandler(OnMenuExit), Shortcut.CtrlX);
-            MenuItem miCalc = new MenuItem("&Menu",
-                new MenuItem[] { miNewCalc, miAdd, miSeparator, miExit });
-            Menu = new MainMenu(new MenuItem[] { miCalc });
+            MenuItem miForm = new MenuItem("&Menu",
+                new MenuItem[] { miNewForm, miAdd, miSeparator, miExit });
+            Menu = new MainMenu(new MenuItem[] { miForm });
             this.ActiveControl = null;
 
             //Walls
