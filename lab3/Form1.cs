@@ -11,8 +11,20 @@ using System.Windows.Forms;
 
 namespace lab3
 {
+    class Pt
+    {
+        public double X { get; set; }
+        public double Y { get; set; }
+        public Pt(double x, double y)
+        {
+            X = x;
+            Y = y;
+        }
+    }
     public partial class Form1 : Form
     {
+
+        List<Pt> graph_pts = new List<Pt>();
         Series series1;
         int SizeX = 800;
         int SizeY = 600;
@@ -22,6 +34,7 @@ namespace lab3
         TextBox N = new TextBox();
         TextBox Min = new TextBox();
         TextBox Max = new TextBox();
+        Chart chart1 = new Chart();
         PictureBox pictureBox1 = new PictureBox();
 
         DataGridView _data = new DataGridView();
@@ -105,22 +118,27 @@ namespace lab3
             pictureBox1.Left = ClientSize.Width - pictureBox1.Width;
             pictureBox1.SizeMode = PictureBoxSizeMode.StretchImage;
 
-            Controls.Add(pictureBox1);
-            Chart chart1 = new Chart();
-            chart1.Series.Clear();
-            series1 = new System.Windows.Forms.DataVisualization.Charting.Series
-            {
-                Name = "Series1",
-                Color = System.Drawing.Color.Green,
-                IsVisibleInLegend = false,
-                IsXValueIndexed = true,
-                ChartType = SeriesChartType.Line
-            };
-            chart1.Location = new Point(0, 0);
-            chart1.Size = new Size(300, 300);
             Calculating();
-            chart1.Series.Add(series1);
+
+            chart1.ChartAreas.Add("1");
+            chart1.Series.Add("X");
+            chart1.ChartAreas["1"].AxisX.Minimum = 0;
+            chart1.ChartAreas["1"].AxisX.Interval = 1;
+            chart1.ChartAreas["1"].AxisX.Maximum = 2 * Math.PI;
+            chart1.ChartAreas["1"].AxisY.Minimum = -10;
+            chart1.ChartAreas["1"].AxisY.Interval = 1;
+            chart1.ChartAreas["1"].AxisY.Maximum = 10;
+           // chart1.Legends[0].Docking = System.Windows.Forms.DataVisualization.Charting.Docking.Bottom;
+            chart1.Series["X"].ChartType = System.Windows.Forms.DataVisualization.Charting.SeriesChartType.Line;
+            chart1.Series["X"].XValueType = ChartValueType.Double;
+            chart1.Series["X"].YValueType = ChartValueType.Double;
+            for (int i = 0; i < graph_pts.Count; i++)
+            {
+                chart1.Series["X"].Points.AddXY(graph_pts[i].X, graph_pts[i].Y);
+            }
             Controls.Add(chart1);
+            
+            Controls.Add(pictureBox1);
             chart1.Invalidate();
             
         }
@@ -171,12 +189,14 @@ namespace lab3
             double step = (b - a )/ n;
             for (double i = a; i <= b; i += step)
             {
+                graph_pts.Add(new Pt(i, Program.Func(i)));
                 _data.Rows.Add(i, Program.Func(i));
-                series1.Points.AddXY(i, Program.Func(i));
+               // series1.Points.AddXY(i, Program.Func(i));
             }
             _data.Height = ClientSize.Height / 12 * _data.Rows.Count;
             Max.Location = new Point(_data.Left, _data.Top + _data.Height + ClientSize.Height / 13);
             Min.Location = new Point(_data.Left + ClientSize.Width / 6, _data.Top + _data.Height + ClientSize.Height / 13);
+           // chart1.Series.Add(series1);
         }
             private void OnMenuStart(object obj, EventArgs ea)
         {
