@@ -8,7 +8,7 @@ namespace lab3
 {
     static class Program
     {
-        static public double Func(double x) =>(Math.Pow(x + 2, 2 / 3f) - Math.Pow(Math.Pow(x - 2, 2), 1 / 3f));
+        static public double Func(double x) => Math.Pow(Math.Pow(x + 2, 2), 1 / 3f) - Math.Pow(Math.Pow(x - 2, 2), 1 / 3f);
           
         /// <summary>
         /// Главная точка входа для приложения.
