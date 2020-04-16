@@ -8,7 +8,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-
+using Excel = Microsoft.Office.Interop.Excel;
 namespace lab3
 {
    
@@ -17,6 +17,7 @@ namespace lab3
         double a1;
         double b1;
         double n1;
+        double alpha;
         List<Pt> [] graph_pts = new List<Pt>[2];
         int SizeX = 800;
         int SizeY = 600;
@@ -43,6 +44,8 @@ namespace lab3
         Button[] _scalingminus = new Button[2];
         DataGridView [] _data = new DataGridView[2];
         RadioButton[] RadioButtons = new RadioButton[4];
+        Label parameter = new Label();
+        TextBox _parameter = new TextBox();
         int index;
         int current;
         public Form1()
@@ -312,7 +315,27 @@ namespace lab3
 
         private void OnLinear(object sender, EventArgs e)
         {
-            throw new NotImplementedException();
+            Controls.Clear();
+            Controls.Add(A[0]);
+            Controls.Add(_a);
+            Controls.Add(B[0]);
+            Controls.Add(_b);
+            Controls.Add(N[0]);
+            Controls.Add(_n);
+            Controls.Add(Max[0]);
+            Controls.Add(_Max);
+            Controls.Add(Min[0]);
+            Controls.Add(_Min);
+            Controls.Add(_data[0]);
+            Controls.Add(y);
+            Controls.Add(x);
+            Controls.Add(Ok);
+
+            // chart1.Legends[0].Docking = System.Windows.Forms.DataVisualization.Charting.Docking.Bottom;
+            Controls.Add(chart[0]);
+            Controls.Add(_grid[0]);
+            Controls.Add(pictureBox[0]);
+            current = 0;
         }
 
         private void OnParametric(object sender, EventArgs e)
@@ -333,7 +356,6 @@ namespace lab3
             Controls.Add(x);
             Controls.Add(Ok);
 
-            // chart1.Legends[1].Docking = System.Windows.Forms.DataVisualization.Charting.Docking.Bottom;
             Controls.Add(chart[1]);
             Controls.Add(_grid[1]);
             Controls.Add(pictureBox[1]);
@@ -351,10 +373,52 @@ namespace lab3
             {
                 RadioButtons[i].Width = ClientSize.Width / 18;
                 RadioButtons[i].Location = new Point(pictureBox[1].Left + i * RadioButtons[i].Width + ClientSize.Width / 30, pictureBox[1].Bottom + ClientSize.Height/60);
+                RadioButtons[i].CheckedChanged += new EventHandler(radioButton_CheckedChanged);
+                RadioButtons[i].Name = "" + i;
                 Controls.Add(RadioButtons[i]);
             }
-            Controls.Add(RadioButtons[0]);
-            Controls.Add(RadioButtons[1]);
+            RadioButtons[0].Checked = true;
+            parameter.Text = "a";
+            parameter.Width = 10;
+            parameter.Location = new Point(chart[0].Width - ClientSize.Width / 5, _scaling.Bottom + ClientSize.Height/50);
+            _parameter.Location = new Point(parameter.Right + ClientSize.Width / 50, _scaling.Bottom + ClientSize.Height / 50-parameter.Height/6);
+            _parameter.Width = 40;
+            Controls.Add(parameter);
+            Controls.Add(_parameter);
+            
+        }
+
+        private void radioButton_CheckedChanged(object sender, EventArgs e)
+        {
+            _data[1].Rows.Clear();
+            chart[1].Series["X"].Points.Clear();
+            switch ((sender as RadioButton).Name)
+            {
+                case "0":
+                    _data[1].Columns[0].HeaderText = "t";
+                    _data[1].Columns[1].HeaderText = "X";
+                    x.Text = "t";
+                    y.Text = "X";
+                    break;
+                case "1":
+                    _data[1].Columns[0].HeaderText = "t";
+                    _data[1].Columns[1].HeaderText = "Y";
+                    x.Text = "t";
+                    y.Text = "Y";
+                    break;
+                case "2":
+                    _data[1].Columns[0].HeaderText = "X";
+                    _data[1].Columns[1].HeaderText = "Y";
+                    x.Text = "X";
+                    y.Text = "Y";
+                    break;
+                case "3":
+                    _data[1].Columns[0].HeaderText = "Y";
+                    _data[1].Columns[1].HeaderText = "X";
+                    x.Text = "Y";
+                    y.Text = "X";
+                    break;
+            }
         }
 
         private void OnSaveChart(object sender, EventArgs e)
@@ -363,23 +427,64 @@ namespace lab3
         }
         private void OnSaveData(object sender, EventArgs e)
         {
-            throw new NotImplementedException();
+            // creating Excel Application  
+            Excel._Application app = new Microsoft.Office.Interop.Excel.Application();
+            // creating new WorkBook within Excel application  
+           Excel._Workbook workbook = app.Workbooks.Add(Type.Missing);
+            // creating new Excelsheet in workbook  
+            Excel._Worksheet worksheet = null;
+            // see the excel sheet behind the program  
+            app.Visible = true;
+            // get the reference of first sheet. By default its name is Sheet1.  
+            // store its reference to worksheet  
+            worksheet = workbook.Sheets["Лист1"];
+            worksheet = workbook.ActiveSheet;
+            // changing the name of active sheet  
+            worksheet.Name = "Exported from gridview";
+            // storing header part in Excel  
+            for (int i = 1; i < _data[current].Columns.Count + 1; i++)
+            {
+                worksheet.Cells[1, i] = _data[current].Columns[i - 1].HeaderText;
+            }
+            // storing Each row and column value to excel sheet  
+            for (int i = 0; i < _data[current].Rows.Count - 1; i++)
+            {
+                for (int j = 0; j < _data[current].Columns.Count; j++)
+                {
+                    worksheet.Cells[i + 2, j + 1] = _data[current].Rows[i].Cells[j].Value;
+                }
+            }
+            // save the application  
+            workbook.SaveAs("C:\\WinForms/lab3/SaveData.xlsx", Type.Missing, Type.Missing, Type.Missing, Type.Missing, Type.Missing, Microsoft.Office.Interop.Excel.XlSaveAsAccessMode.xlExclusive, Type.Missing, Type.Missing, Type.Missing, Type.Missing);
+            // Exit from the application  
+            app.Quit();
         }
         private void OnGetData(object sender, EventArgs e)
         {
-            throw new NotImplementedException();
+            Excel.Application ObjWorkExcel = new Excel.Application(); //открыть эксель
+            Excel.Workbook ObjWorkBook = ObjWorkExcel.Workbooks.Open("C:\\WinForms/lab3/GetData.xlsx", Type.Missing, Type.Missing, Type.Missing, Type.Missing, Type.Missing, Type.Missing, Type.Missing, Type.Missing, Type.Missing, Type.Missing, Type.Missing, Type.Missing, Type.Missing, Type.Missing); //открыть файл
+            Excel.Worksheet ObjWorkSheet = (Excel.Worksheet)ObjWorkBook.Sheets[1]; //получить 1 лист
+            A[current].Text = ObjWorkSheet.Cells[1, 2].Value.ToString();
+            B[current].Text = ObjWorkSheet.Cells[2, 2].Value.ToString();
+            N[current].Text = ObjWorkSheet.Cells[3, 2].Value.ToString();
+            if(current == 1)
+                _parameter.Text = ObjWorkSheet.Cells[4, 2].Value.ToString();
+            ObjWorkBook.Close(false, Type.Missing, Type.Missing); //закрыть не сохраняя
+            ObjWorkExcel.Quit(); // выйти из экселя
+            GC.Collect(); // убрать за собой
+            
         }
 
         private void OnMinusClick(object sender, EventArgs e)
         {
-            chart[current].ChartAreas[current].InnerPlotPosition.Width -= (int)chart[current].ChartAreas[current].InnerPlotPosition.Width * ((float)0.1);
+            chart[current].ChartAreas[0].InnerPlotPosition.Width -= (int)chart[current].ChartAreas[0].InnerPlotPosition.Width * ((float)0.1);
             chart[current].Invalidate();
         }
 
         private void OnPlusClick(object sender, EventArgs e)
         {
-            if (chart[current].ChartAreas[current].InnerPlotPosition.Width * 1.1 > 100) return;
-            chart[current].ChartAreas[current].InnerPlotPosition.Width *= (float)1.1;
+            if (chart[current].ChartAreas[0].InnerPlotPosition.Width * 1.1 > 100) return;
+            chart[current].ChartAreas[0].InnerPlotPosition.Width *= (float)1.1;
             chart[current].Invalidate();
         }
 
@@ -427,6 +532,23 @@ namespace lab3
                 MessageBox.Show("n<1 !");
                 return;
             }
+            if(current == 1)
+            {
+                try
+                {
+                    alpha = Convert.ToDouble(_parameter.Text.Replace('.', ','));
+                    if(alpha <= 0)
+                    {
+                        MessageBox.Show("a<=0!");
+                        return;
+                    }
+                }
+                catch
+                {
+                    MessageBox.Show("a - невірне число");
+                    return;
+                }
+            }
             x.ForeColor = Color.Black;
             y.ForeColor = Color.Black;
             chart[current].Series["X"].Points.Clear();
@@ -441,7 +563,9 @@ namespace lab3
             else
             {
                 _data[current].Rows.Clear();
+                if(current == 0)
                 Calculating(a1, b1, n1);
+                else Calculating(a1, b1, n1,alpha);
             }
             chart[current].Series["X"].ChartType = System.Windows.Forms.DataVisualization.Charting.SeriesChartType.Line;
             chart[current].Series["X"].XValueType = ChartValueType.Double;
@@ -547,6 +671,16 @@ namespace lab3
             _scalingminus[current].Location = new Point(_scalingplus[current].Right + ClientSize.Width / 80, _scaling.Location.Y - ClientSize.Width / 150);
             _scalingminus[current].Size = new Size(_scaling.Height, _scaling.Height);
             _scalingminus[current].TextAlign = ContentAlignment.MiddleCenter;
+
+            parameter.Location = new Point(_grid[1].Left, _scaling.Bottom + ClientSize.Height / 50);
+            _parameter.Location = new Point(parameter.Right + ClientSize.Width / 50, _scaling.Bottom + ClientSize.Height / 50 - parameter.Height / 6);
+
+            for (int i = 0; i < 4; i++)
+            {
+                RadioButtons[i].Width = ClientSize.Width / 18;
+                RadioButtons[i].Location = new Point(pictureBox[1].Left + i * RadioButtons[i].Width + ClientSize.Width / 30, pictureBox[1].Bottom + ClientSize.Height / 60);
+              
+            }
         }
         void Calculating(double a, double b, double n)
         {
@@ -572,7 +706,37 @@ namespace lab3
             chart[current].ChartAreas["1"].AxisY.Maximum = (int)MaxV+1;
 
         }
-            private void OnMenuStart(object obj, EventArgs ea)
+        void Calculating(double a, double b, double n,double alpha)
+        {
+
+            double MaxV = Program.Func(b), MinV = Program.Func(a);
+            double temp;
+            double step = (b - a) / (n - 1);
+            for (double i = a; i <= b; i += step)
+            {
+                if (x.Text == "t" && y.Text == "X")
+                    temp = Program.X(i);
+                else if (x.Text == "t" && y.Text == "Y")
+                    temp = Program.Y(i);
+                else if (x.Text == "X" && y.Text == "Y")
+                    temp = Program.FuncY(i,alpha);
+                else temp = Program.FuncX(i, alpha);
+                if (temp > MaxV) MaxV = temp;
+                else if (temp < MinV) MinV = temp;
+                graph_pts[current].Add(new Pt(i, temp));
+                _data[current].Rows.Add(i, temp);
+            }
+            Max[current].Text = "" + MaxV;
+            Min[current].Text = "" + MinV;
+            chart[current].ChartAreas["1"].AxisX.Minimum = a;
+            chart[current].ChartAreas["1"].AxisX.Interval = step;
+            chart[current].ChartAreas["1"].AxisX.Maximum = b;
+            chart[current].ChartAreas["1"].AxisY.Minimum = (int)MinV - 1;
+            chart[current].ChartAreas["1"].AxisY.Interval = 1;
+            chart[current].ChartAreas["1"].AxisY.Maximum = (int)MaxV + 1;
+
+        }
+        private void OnMenuStart(object obj, EventArgs ea)
         {
 
         }
