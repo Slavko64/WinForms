@@ -180,7 +180,7 @@ namespace WindowsFormsApp1
             CenterToScreen();
 
 
-            pictureBox1.Image = Image.FromFile("C:\\Users/Ярослав/Desktop/WindowsFormsApp1/Screenshot_2.png");
+            pictureBox1.Image = Image.FromFile("C:\\WinForms/Calc for median/Screenshot_2.png");
             pictureBox1.Left = 262;
             pictureBox1.Top = 155;
             pictureBox1.SizeMode = PictureBoxSizeMode.AutoSize;
@@ -201,8 +201,8 @@ namespace WindowsFormsApp1
             }
             lb.Text = "Per = ";
             Per.Text = "";
-
-            pictureBox1.Image = Image.FromFile("C:\\Users/Ярослав/Desktop/WindowsFormsApp1/Screenshot_2.png");
+            pictureBox1.BackColor = Color.Blue;
+            pictureBox1.Image = Image.FromFile("C:\\WinForms/Calc for median/Screenshot_2.png");
             pictureBox1.Left = 262;
             pictureBox1.Top = 155;
             pictureBox1.SizeMode = PictureBoxSizeMode.AutoSize;
