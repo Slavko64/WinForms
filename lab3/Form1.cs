@@ -220,8 +220,8 @@ namespace lab3
             chart[1].BackColor = Color.White;
             chart[1].ChartAreas[0].AxisX.MajorGrid.Enabled = false;
             chart[1].ChartAreas[0].AxisY.MajorGrid.Enabled = false;
-
-
+            chart[0].MouseWheel += new MouseEventHandler(chart1_MouseWheel);
+            chart[1].MouseWheel += new MouseEventHandler(chart1_MouseWheel);
             Ok.Location = new Point(chart[0].Width, chart[0].Height);
 
             Ok.Size = new Size(ClientSize.Width -Ok.Location.X, ClientSize.Height - Ok.Location.Y);
@@ -487,7 +487,37 @@ namespace lab3
             chart[current].ChartAreas[0].InnerPlotPosition.Width *= (float)1.1;
             chart[current].Invalidate();
         }
+        private void chart1_MouseWheel(object sender, MouseEventArgs e)
+        {
+            var chart = (Chart)sender;
+            var xAxis = chart.ChartAreas[0].AxisX;
+            var yAxis = chart.ChartAreas[0].AxisY;
 
+            try
+            {
+                if (e.Delta < 0) // Scrolled down.
+                {
+                    xAxis.ScaleView.ZoomReset();
+                    yAxis.ScaleView.ZoomReset();
+                }
+                else if (e.Delta > 0) // Scrolled up.
+                {
+                    var xMin = xAxis.ScaleView.ViewMinimum;
+                    var xMax = xAxis.ScaleView.ViewMaximum;
+                    var yMin = yAxis.ScaleView.ViewMinimum;
+                    var yMax = yAxis.ScaleView.ViewMaximum;
+
+                    var posXStart = xAxis.PixelPositionToValue(e.Location.X) - (xMax - xMin) / 4;
+                    var posXFinish = xAxis.PixelPositionToValue(e.Location.X) + (xMax - xMin) / 4;
+                    var posYStart = yAxis.PixelPositionToValue(e.Location.Y) - (yMax - yMin) / 4;
+                    var posYFinish = yAxis.PixelPositionToValue(e.Location.Y) + (yMax - yMin) / 4;
+
+                    xAxis.ScaleView.Zoom(posXStart, posXFinish);
+                    yAxis.ScaleView.Zoom(posYStart, posYFinish);
+                }
+            }
+            catch { }
+        }
         private void OnGridClick(object sender, EventArgs e)
         {
             if(grid_bool[current] == false)
