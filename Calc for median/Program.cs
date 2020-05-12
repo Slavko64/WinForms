@@ -77,7 +77,7 @@ namespace WindowsFormsApp1
             Per.Top = 100;
             Controls.Add(Per);
 
-
+            //вивід кнопок цифр
             Field = new Button[SideY, SideX];
             int k = 9;
             int[] Numbers = { 1, 2, 3, 4, 5, 6, 7, 8, 9 };
@@ -113,7 +113,7 @@ namespace WindowsFormsApp1
             Enters.Click += new EventHandler(OnCellClick);
             Controls.Add(Enters);
 
-
+            //вивід букв сторін трикутника
             letters = new Label[4];
             for (i = 0; i < 4; i++)
             {
@@ -150,7 +150,7 @@ namespace WindowsFormsApp1
             lb.Font = new Font("Century", 12, FontStyle.Bold);
             Controls.Add(lb);
 
-
+            //додаю тултіпс
             toolTips = new ToolTip[4];
             for (i = 0; i < 4; i++)
             {
@@ -188,7 +188,7 @@ namespace WindowsFormsApp1
         }
 
 
-        void OnMenuStart(object obj, EventArgs ea)
+        void OnMenuStart(object obj, EventArgs ea) // вивід на екран після нажаття кнопки Reset, повністю очищає всі поля
         {
 
             for (int i = 0; i < 4; i++)
@@ -215,7 +215,7 @@ namespace WindowsFormsApp1
         }
 
 
-        private void CellGotFocus(object sender, EventArgs e)
+        private void CellGotFocus(object sender, EventArgs e) // щоб фокус не пропадав при нажатті на кнопку цифри
         {
            
             if (FocusedTextField != -1)
@@ -234,8 +234,8 @@ namespace WindowsFormsApp1
 
         }
 
-        public void txtAdd_KeyDown(object sender, KeyEventArgs e)
-        {
+        public void txtAdd_KeyDown(object sender, KeyEventArgs e) // цей Event-Handler перехоплює нажаття клавіатури і дозволяє 
+        {                                                         // надпис тільки цифр або розділових знаків
             e.SuppressKeyPress = true;
             if (TextFields[FocusedTextField].Text.Length == 1 && TextFields[FocusedTextField].Text[0] == '0' && (e.KeyCode == Keys.D0 || e.KeyCode == Keys.NumPad0))
                 e.SuppressKeyPress = true;
@@ -279,7 +279,7 @@ namespace WindowsFormsApp1
             Per.Text = "";
         }
 
-        public void OnCellClick(object obj, EventArgs ea)
+        public void OnCellClick(object obj, EventArgs ea)  // зчитує нажаття кнопки на екрані, і передає її в текстове поле 
         {
             Button Cell = obj as Button;
              try
@@ -302,7 +302,7 @@ namespace WindowsFormsApp1
                     TextFields[FocusedTextField].Text = "";
                     dotcount[FocusedTextField] = 0;
                 }
-                else if (Cell.Text == ",")
+                else if (Cell.Text == ",") // ком не може бути більше ніж 1
                 {
                     int count = 0;
                     for (int i = 0; i < TextFields[FocusedTextField].TextLength; i++)
@@ -329,7 +329,7 @@ namespace WindowsFormsApp1
             }
         }
 
-        private void Calculating(double a, double b, double c)
+        private void Calculating(double a, double b, double c) // основна функція, в якій рахується результат
         {
             
             if (a + b > c && a + c > b && c + b > a)
