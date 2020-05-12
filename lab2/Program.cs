@@ -64,7 +64,7 @@ namespace lab2
             bufferedGraphicsContext = new BufferedGraphicsContext();
             bufferedGraphics = bufferedGraphicsContext.Allocate(graphics, new Rectangle(0, 0, panel.Width, panel.Height));
         }
-        private void DrawToBuffer() // малює мяч і запобігає миганню
+        private void Draw() // малює мяч і запобігає миганню
         {
             bufferedGraphics.Graphics.Clear(BackColor);
 
@@ -179,6 +179,7 @@ namespace lab2
         {
             if (brush[1].Color != Color.FromArgb(240, 240, 240))
             {
+
                 if (rect[0].IntersectsWith(rect[1]) == true && f == false)
                 {
                     Balls[0].CollideBall(Balls[1]);
@@ -246,7 +247,7 @@ namespace lab2
                 Balls[1].Move();
                 rect[1].Offset((float)Balls[1].Velocity.X, (float)Balls[1].Velocity.Y);
             }
-            DrawToBuffer();
+            Draw();
         }
         private void OnTimer1(object sender, EventArgs e)
         {
@@ -812,7 +813,7 @@ namespace lab2
             rect[0].Width = (float)Balls[0].Diameter;
             brush[0].Color = Balls[0].color;
             Balls[0].DirectionVelocity();
-            DrawToBuffer();
+            Draw();
 
 
         }
@@ -841,7 +842,7 @@ namespace lab2
             rect[1].Width = (float)Balls[1].Diameter;
             brush[1].Color = Balls[1].color;
             Balls[1].DirectionVelocity();
-            DrawToBuffer();
+            Draw();
 
         }
         public void PaintWall(object obj, PaintEventArgs e)
@@ -866,7 +867,7 @@ namespace lab2
             rect[1].Width = 0;
             rect[1].Height = 0;
             brush[1].Color = Color.FromArgb(240, 240, 240);
-            DrawToBuffer();
+            Draw();
             Controls.Add(Go);
             Controls.Add(MyName);
             Controls.Add(panel);
