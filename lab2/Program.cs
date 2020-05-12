@@ -9,111 +9,7 @@ using Timer = System.Windows.Forms.Timer;
 
 namespace lab2
 {
-    public class Vector
-    {
-        public double X { get; set; }
-        public double Y { get; set; }
-    }
-    class Wall
-    {
-        public int WallNumber { get; set; }
-    }
-    class Ball
-        {
-        public Vector Pos { get; set; }
-        public double Diameter { get; set; }
-        public double Mass { get; set; }
-        public Vector Velocity { get; set; }
-        public Vector Direction { get; set; }
-        public Color color { get; set; }
-        public void Draw()
-        {
-            //я не знаю, шо впринципі має робити функція дров в класі, який не наслідує форми тому хоть шось він робить
-            double x1 = (Direction.X - Pos.X);
-            double y1 = (Direction.Y - Pos.Y);
-            double k = Math.Sqrt(x1 * x1 + y1 * y1);
-            Velocity.X = x1 * Velocity.X / k;
-            Velocity.Y = y1 * Velocity.Y / k;
-
-        }
-        public void Move()
-        {
-            if (Velocity.X > 0 && Velocity.Y > 0)
-            {
-                Pos.X += Velocity.X - Velocity.X * Mass * 0.0001;
-                Pos.Y += Velocity.Y - Velocity.Y * Mass * 0.0001;
-            }
-            else if (Velocity.X < 0 && Velocity.Y > 0)
-            {
-                Pos.X += Velocity.X + Velocity.X * Mass * 0.0001;
-                Pos.Y += Velocity.Y - Velocity.Y * Mass * 0.0001;
-            }
-            else if (Velocity.X > 0 && Velocity.Y < 0)
-            {
-                Pos.X += Velocity.X - Velocity.X * Mass * 0.0001;
-                Pos.Y += Velocity.Y + Velocity.Y * Mass * 0.0001;
-            }
-            else
-            {
-                Pos.X += Velocity.X + Velocity.X * Mass * 0.0001;
-                Pos.Y += Velocity.Y + Velocity.Y * Mass * 0.0001;
-            }
-            Velocity.X = Velocity.X - Velocity.X * Mass * 0.0001;
-            Velocity.Y = Velocity.Y - Velocity.Y * Mass * 0.0001;
-            if (Math.Abs(Velocity.X) < 1E-3 || Math.Abs(Velocity.Y) < 1E-3)
-            {
-                Velocity.X = 0;
-                Velocity.Y = 0;
-            }
-
-        }
-        public void CollideBall(Ball b)
-        {
-
-            double alpha = (Velocity.X * b.Velocity.X + Velocity.Y * b.Velocity.Y) / (Math.Sqrt(Math.Pow(Velocity.X, 2) + Math.Pow(Velocity.Y, 2)) * Math.Sqrt(Math.Pow(b.Velocity.X, 2) + Math.Pow(b.Velocity.Y, 2)));
-            if (Velocity.X > b.Velocity.X)
-            {
-                Velocity.X *= (1-Mass*0.01) * alpha;
-                Velocity.Y *= (1 - Mass * 0.01) * alpha;
-                b.Velocity.X /= (1 - b.Mass * 0.01) * alpha;
-                b.Velocity.Y /= (1 - b.Mass * 0.01) * alpha;
-            }
-            else
-            {
-                Velocity.X /= (1 - Mass * 0.01) * alpha;
-                Velocity.Y /= (1 - Mass * 0.01) * alpha;
-                b.Velocity.X *= (1 - b.Mass * 0.01) * alpha;
-                b.Velocity.Y *= (1 - b.Mass * 0.01) * alpha;
-            }
-        }
-        public void CollideWall(Wall w)
-        {
-          
-            switch (w.WallNumber) {
-                case 1: 
-                    Velocity.X *= Math.Cos(Math.PI / 4) * (1 - Mass * 0.01);
-                    Velocity.Y *= -(1 - Mass * 0.01);
-                    break;
-                case 2:
-                    Velocity.X *= Math.Sin(Math.PI / 4) * (1 - Mass * 0.01);
-                    Velocity.Y *= -(1 - Mass * 0.01);
-                    break;
-                case 3:
-                    Velocity.X *= -(1 - Mass * 0.01);
-                    Velocity.Y *= Math.Sin(Math.PI / 4) * (1 - Mass * 0.01);
-                    break;
-                case 4:
-                    Velocity.X *= -(1 - Mass * 0.01);
-                    Velocity.Y *= Math.Sin(Math.PI / 4) * (1 - Mass * 0.01);
-                    break;
-                default:
-                    break;
-        }
-            
-
-        }
-    }
-    class MyForm : Form
+   class MyForm : Form
     {
         // For Drawing
         private readonly SolidBrush[] brush = new SolidBrush[2];
@@ -168,7 +64,7 @@ namespace lab2
             bufferedGraphicsContext = new BufferedGraphicsContext();
             bufferedGraphics = bufferedGraphicsContext.Allocate(graphics, new Rectangle(0, 0, panel.Width, panel.Height));
         }
-        private void DrawToBuffer()
+        private void DrawToBuffer() // малює мяч і запобігає миганню
         {
             bufferedGraphics.Graphics.Clear(BackColor);
 
@@ -279,9 +175,8 @@ namespace lab2
                 t1.Stop();
             }
         }
-        private void OnTimer1(object sender, EventArgs e)
+        private void Moving() // перевіряє на зіткнення і перемальовує мяч
         {
-
             if (brush[1].Color != Color.FromArgb(240, 240, 240))
             {
                 if (rect[0].IntersectsWith(rect[1]) == true && f == false)
@@ -290,63 +185,75 @@ namespace lab2
                     f = true;
                 }
             }
-            if (rect[0].Bottom >= panel.Bottom-20 && Balls[0].Velocity.Y  > 0 )
+            #region wall
+            if (rect[0].Bottom >= panel.Bottom - 20 && Balls[0].Velocity.Y > 0)
             {
                 Balls[0].CollideWall(new Wall { WallNumber = 1 });
                 rect[0].Offset(0, panel.Bottom - 20 - rect[0].Bottom);
                 f = false;
             }
-            else if(rect[0].Top<= panel.Top-20 && Balls[0].Velocity.Y < 0)
+            else if (rect[0].Top <= panel.Top - 20 && Balls[0].Velocity.Y < 0)
             {
                 Balls[0].CollideWall(new Wall { WallNumber = 2 });
                 rect[0].Offset(0, panel.Top - 20 - rect[0].Top);
                 f = false;
             }
-            else if(rect[0].Right >= panel.Right-20 && Balls[0].Velocity.X > 0)
+            else if (rect[0].Right >= panel.Right - 20 && Balls[0].Velocity.X > 0)
             {
-                rect[0].Offset(panel.Right - 20 - rect[0].Right, 0 );
+                rect[0].Offset(panel.Right - 20 - rect[0].Right, 0);
                 Balls[0].CollideWall(new Wall { WallNumber = 3 });
                 f = false;
             }
-            else if(rect[0].Left  <= panel.Left-20 && Balls[0].Velocity.X < 0 )
+            else if (rect[0].Left <= panel.Left - 20 && Balls[0].Velocity.X < 0)
             {
                 Balls[0].CollideWall(new Wall { WallNumber = 4 });
                 rect[0].Offset(panel.Left - 20 - rect[0].Left, 0);
                 f = false;
             }
-
+            #endregion
             Balls[0].Move();
             rect[0].Offset((float)(Balls[0].Velocity.X), (float)(Balls[0].Velocity.Y));
 
-            if (brush[1].Color != Color.FromArgb(240,240,240))
+            if (brush[1].Color != Color.FromArgb(240, 240, 240))
             {
-                
-                    if (rect[1].Bottom >= panel.Bottom - 20 && Balls[1].Velocity.Y > 0)
+
+                if (rect[1].Bottom >= panel.Bottom - 20 && Balls[1].Velocity.Y > 0)
                 {
                     Balls[1].CollideWall(new Wall { WallNumber = 1 });
-                    
+                    rect[1].Offset(0, panel.Bottom - 20 - rect[1].Bottom);
+                    f = false;
+
                 }
                 else if (rect[1].Top <= panel.Top - 20 && Balls[1].Velocity.Y < 0)
                 {
                     Balls[1].CollideWall(new Wall { WallNumber = 2 });
+                    rect[1].Offset(0, panel.Top - 20 - rect[1].Top);
+                    f = false;
                 }
                 else if (rect[1].Right >= panel.Right - 20 && Balls[1].Velocity.X > 0)
                 {
+                    rect[1].Offset(panel.Right - 20 - rect[1].Right, 0);
                     Balls[1].CollideWall(new Wall { WallNumber = 3 });
+                    f = false;
                 }
                 else if (rect[1].Left <= panel.Left - 20 && Balls[1].Velocity.X < 0)
                 {
                     Balls[1].CollideWall(new Wall { WallNumber = 4 });
+                    rect[1].Offset(panel.Left - 20 - rect[1].Left, 0);
+                    f = false;
                 }
 
                 Balls[1].Move();
                 rect[1].Offset((float)Balls[1].Velocity.X, (float)Balls[1].Velocity.Y);
             }
             DrawToBuffer();
-
+        }
+        private void OnTimer1(object sender, EventArgs e)
+        {
+            Moving();
         }
 
-        private void OnMenuAdd(object sender, EventArgs e)
+        private void OnMenuAdd(object sender, EventArgs e) // вивід кнопок для мяча
         {
 
             #region Ball[0] Properties
@@ -904,7 +811,7 @@ namespace lab2
             rect[0].Height = (float)Balls[0].Diameter;
             rect[0].Width = (float)Balls[0].Diameter;
             brush[0].Color = Balls[0].color;
-            Balls[0].Draw();
+            Balls[0].DirectionVelocity();
             DrawToBuffer();
 
 
@@ -933,7 +840,7 @@ namespace lab2
             rect[1].Height = (float)Balls[1].Diameter;
             rect[1].Width = (float)Balls[1].Diameter;
             brush[1].Color = Balls[1].color;
-            Balls[1].Draw();
+            Balls[1].DirectionVelocity();
             DrawToBuffer();
 
         }

@@ -14,19 +14,24 @@ namespace lab4
 
     public partial class Form1 : Form
     {
-        List<Label> digit = new List<Label>();
+        Font drawFont = new Font("Arial", 8);
+        SolidBrush drawBrush = new SolidBrush(Color.Black);
+        List<double> digitsX = new List<double>();
+        List<int> digitsY = new List<int>();
         // For Drawing
         Pen pen = new Pen(Color.Black,1);
         Panel panel;
         Graphics graphics;
         BufferedGraphicsContext bufferedGraphicsContext;
         BufferedGraphics bufferedGraphics;
+        List<Point[]> linesX = new List<Point[]>();
+        List<Point[]> linesY = new List<Point[]>();
         List<Point[]> lines = new List<Point[]>();
         //
         double a1;
         double b1;
-        double n1;
-        double alpha;
+        int n1;
+        //double alpha;
         List<Pt>[] graph_pts = new List<Pt>[2];
         int SizeX = 800;
         int SizeY = 600;
@@ -55,7 +60,7 @@ namespace lab4
         RadioButton[] RadioButtons = new RadioButton[4];
         Label parameter = new Label();
         TextBox _parameter = new TextBox();
-        int index;
+        //int index;
         int current;
         private void InitializeGraphics()
         {
@@ -69,8 +74,18 @@ namespace lab4
         private void DrawToBuffer()
         {
             bufferedGraphics.Graphics.Clear(Color.White);
-            foreach (Point[] line in lines)
+            foreach(var line in lines)
                 bufferedGraphics.Graphics.DrawLine(pen, line[0].X, line[0].Y, line[1].X, line[1].Y);
+            for (int i = 0; i < linesY.Count; i++)
+            {
+                bufferedGraphics.Graphics.DrawLine(pen, linesY[i][0].X, linesY[i][0].Y, linesY[i][1].X, linesY[i][1].Y);
+                bufferedGraphics.Graphics.DrawString("" + digitsY[i], drawFont, drawBrush, linesY[i][0].X - panel.Width / 30, linesY[i][1].Y-5);
+            }
+            for (int i = 0; i < linesX.Count; i++)
+            {
+                bufferedGraphics.Graphics.DrawLine(pen, linesX[i][0].X, linesX[i][0].Y, linesX[i][1].X, linesX[i][1].Y);
+                bufferedGraphics.Graphics.DrawString("" + digitsX[i], drawFont, drawBrush, linesX[i][0].X + 5, linesX[i][1].Y + panel.Width / 30);
+            }
             bufferedGraphics.Render();
         }
         public Form1()
@@ -348,10 +363,6 @@ namespace lab4
 
             InitializeGraphics();
             #endregion
-            for (int i = 0; i < 5; i++)
-            {
-                digit.Add(new Label());
-            }
             
          }
 
@@ -590,7 +601,7 @@ namespace lab4
 
             A[0].Text = "-5";
             B[0].Text = "5";
-            N[0].Text = "1";
+            N[0].Text = "2";
             #region
             //Controls.Add(_scaling);
             //Controls.Add(_scalingplus[current]);
@@ -600,7 +611,7 @@ namespace lab4
             {
                 a1 = Convert.ToDouble(A[current].Text.Replace('.', ','));
                 b1 = Convert.ToDouble(B[current].Text.Replace('.', ','));
-                n1 = Convert.ToDouble(N[current].Text.Replace('.', ','));
+                n1 = Convert.ToInt32(N[current].Text.Replace('.', ','));
             }
             catch
             {
@@ -770,7 +781,7 @@ namespace lab4
 
             }
         }
-        void Calculating(double a, double b, double n)
+        void Calculating(double a, double b, int n)
         {
 
             double MaxV = Program.Func(b), MinV = Program.Func(a);
@@ -787,18 +798,22 @@ namespace lab4
             Max[current].Text = "" + MaxV;
             Min[current].Text = "" + MinV;
 
-            int count = Math.Abs((int)MaxV + 1 -((int)MinV - 1))+1;
-            int length = lines[0][1].Y - lines[0][0].Y;
-            for (int i = 0; i < count; i++)
+            int countY = Math.Abs((int)MaxV + 1 -((int)MinV - 1))+1;
+            MinV = (int)MinV - 1;
+            int lengthY = lines[0][1].Y - lines[0][0].Y;
+            int LengthX = lines[1][1].X - lines[1][0].X;
+            for (int i = 0; i < countY; i++)
             {
-                lines.Add(new Point[] { new Point(lines[0][0].X /*- panel.Width / 30*/, lines[1][0].Y - length/(count-1)*i), new Point(lines[0][0].X, lines[1][0].Y  - length / (count-1) * i) });
-                digit[i] = new Label
+                linesY.Add(new Point[] { new Point(lines[0][0].X - panel.Width / 30, lines[1][0].Y - lengthY/(countY-1)*i), new Point(lines[0][0].X, lines[1][0].Y  - lengthY / (countY-1) * i) });
+                digitsY.Add((int)MinV++);
+            }
+            if (n > 1)
+            {
+                for (int i = 0; i < n; i++)
                 {
-                    Text = "" + MinV++,
-                    Location = new Point(lines[0][0].X - panel.Width / 24, lines[1][0].Y - (length / count * i)),
-                    Width = 10
-                };
-                Controls.Add(digit[i]);
+                    linesX.Add(new Point[] { new Point(lines[1][0].X + (LengthX / (n - 1) * i), lines[1][0].Y + panel.Width / 30), new Point(lines[1][0].X + (LengthX / (n - 1) * i), lines[1][0].Y) });
+                    digitsX.Add(graph_pts[current][i].X);
+                }
             }
             chart[current].ChartAreas["1"].AxisX.Minimum = a;
             chart[current].ChartAreas["1"].AxisX.Interval = step;
