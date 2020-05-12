@@ -70,6 +70,8 @@ namespace lab3
             MenuItem Function = new MenuItem("&Function", new MenuItem[] { Linear, Parametric });
             Menu = new MainMenu(new MenuItem[] { miCalc, WorkWithFiles, Function });
             CenterToScreen();
+
+            //Динамічно розташовую на формі елементи, які привязані до форми вікна
             for (int i = 0; i < 2; i++)
             {
                     A[i] = new TextBox();
@@ -96,10 +98,8 @@ namespace lab3
             _data[0].BackgroundColor = Color.Azure;
             _data[0].Columns.Add("", "");
             _data[0].ColumnCount = 2;
-            //_data.Columns[-1].Width = 0;
             _data[0].RowHeadersVisible = false;
             _data[0].Columns[0].Name = "X";
-            //_data.Columns[0]. = 0;
             _data[0].Columns[0].HeaderText = "X";
             _data[0].Columns[0].Width = _data[0].Width / 2;
             _data[0].Columns[1].Width = _data[0].Width / 2;
@@ -125,7 +125,6 @@ namespace lab3
             _data[1].Columns[1].ReadOnly = true;
 
 
-            //A1  = new TextBox();
             A[0].Location = new Point(ClientSize.Width - ClientSize.Width*4/5,ClientSize.Height);
             A[0].AutoSize = false;
             A[1].Location = new Point(ClientSize.Width - ClientSize.Width * 4 / 5, ClientSize.Height);
@@ -313,7 +312,7 @@ namespace lab3
             
         }
 
-        private void OnLinear(object sender, EventArgs e)
+        private void OnLinear(object sender, EventArgs e) // при перході на лінійний графік очищаю всі елементи, і додаю відповідні для лінійного
         {
             Controls.Clear();
             Controls.Add(A[0]);
@@ -331,7 +330,7 @@ namespace lab3
             Controls.Add(x);
             Controls.Add(Ok);
 
-            // chart1.Legends[0].Docking = System.Windows.Forms.DataVisualization.Charting.Docking.Bottom;
+
             Controls.Add(chart[0]);
             Controls.Add(_grid[0]);
             Controls.Add(pictureBox[0]);
@@ -339,7 +338,7 @@ namespace lab3
         }
 
         private void OnParametric(object sender, EventArgs e)
-        {
+        {// при перході на параметричний графік очищаю всі елементи, і додаю відповідні для параметричного
             Controls.Clear();
             Controls.Add(A[1]);
             Controls.Add(_a);
@@ -389,7 +388,7 @@ namespace lab3
         }
 
         private void radioButton_CheckedChanged(object sender, EventArgs e)
-        {
+        {//зміни при зміні радіобатона якої функції вам потрібно для параметричного графіка
             _data[1].Rows.Clear();
             chart[1].Series["X"].Points.Clear();
             switch ((sender as RadioButton).Name)
@@ -422,11 +421,11 @@ namespace lab3
         }
 
         private void OnSaveChart(object sender, EventArgs e)
-        {
+        {//збереження графіку у файл
             chart[0].SaveImage("C:\\WinForms/lab3/chart.png", ChartImageFormat.Png);
         }
         private void OnSaveData(object sender, EventArgs e)
-        {
+        {//збереження данних у ексель файл
             // creating Excel Application  
             Excel._Application app = new Microsoft.Office.Interop.Excel.Application();
             // creating new WorkBook within Excel application  
@@ -459,7 +458,7 @@ namespace lab3
             // Exit from the application  
             app.Quit();
         }
-        private void OnGetData(object sender, EventArgs e)
+        private void OnGetData(object sender, EventArgs e) //стягування данних з файлу ексель
         {
             Excel.Application ObjWorkExcel = new Excel.Application(); //открыть эксель
             Excel.Workbook ObjWorkBook = ObjWorkExcel.Workbooks.Open("C:\\WinForms/lab3/GetData.xlsx", Type.Missing, Type.Missing, Type.Missing, Type.Missing, Type.Missing, Type.Missing, Type.Missing, Type.Missing, Type.Missing, Type.Missing, Type.Missing, Type.Missing, Type.Missing, Type.Missing); //открыть файл
@@ -476,19 +475,19 @@ namespace lab3
         }
 
         private void OnMinusClick(object sender, EventArgs e)
-        {
+        {//звужовання графіка
             chart[current].ChartAreas[0].InnerPlotPosition.Width -= (int)chart[current].ChartAreas[0].InnerPlotPosition.Width * ((float)0.1);
             chart[current].Invalidate();
         }
 
         private void OnPlusClick(object sender, EventArgs e)
-        {
+        {//збільшення графіка
             if (chart[current].ChartAreas[0].InnerPlotPosition.Width * 1.1 > 100) return;
             chart[current].ChartAreas[0].InnerPlotPosition.Width *= (float)1.1;
             chart[current].Invalidate();
         }
         private void chart1_MouseWheel(object sender, MouseEventArgs e)
-        {
+        {//зум графіка за допомогою мишки
             var chart = (Chart)sender;
             var xAxis = chart.ChartAreas[0].AxisX;
             var yAxis = chart.ChartAreas[0].AxisY;
@@ -519,7 +518,7 @@ namespace lab3
             catch { }
         }
         private void OnGridClick(object sender, EventArgs e)
-        {
+        {//створення сітки
             if(grid_bool[current] == false)
             {
                 grid_bool[current] = true;
@@ -541,6 +540,7 @@ namespace lab3
             Controls.Add(_scaling);
             Controls.Add(_scalingplus[current]);
             Controls.Add(_scalingminus[current]);
+            //перевірка чисел
             try
             {
                 a1 = Convert.ToDouble(A[current].Text.Replace('.', ','));
@@ -583,7 +583,7 @@ namespace lab3
             y.ForeColor = Color.Black;
             chart[current].Series["X"].Points.Clear();
             Int32 selectedCellCount = _data[current].GetCellCount(DataGridViewElementStates.Selected);
-            if (selectedCellCount > 0)
+            if (selectedCellCount > 0) // якщо виділені дані з датагрід, то по них будується графік
             {
                 for (int i = 0; i < selectedCellCount; i++) {
                     index = int.Parse(_data[current].SelectedCells[i].RowIndex.ToString());
@@ -611,7 +611,7 @@ namespace lab3
                 _data[current].Columns[0].Width = _data[current].Width / 2-2;
                 _data[current].Columns[1].Width = _data[current].Width / 2-2;
             }
-            for (int i = 0; i < graph_pts[current].Count; i++)
+            for (int i = 0; i < graph_pts[current].Count; i++)//малює графік
             {
                 chart[current].Series["X"].Points.AddXY(graph_pts[current][i].X, graph_pts[current][i].Y);
             }
@@ -620,7 +620,7 @@ namespace lab3
             
         }
 
-        private void OnSizeChanged(object sender, EventArgs e)
+        private void OnSizeChanged(object sender, EventArgs e)//якщо екран зміню свої розміри -  елементи адаптуються 
         {
             SizeX = Width;
             SizeY = Height;
@@ -714,7 +714,7 @@ namespace lab3
         }
         void Calculating(double a, double b, double n)
         {
-            
+            //рахує значення функції і записує відповідні дані і датагрід
             double MaxV = Program.Func(b), MinV = Program.Func(a);
             double temp;
             double step = (b - a )/ (n-1);
@@ -738,7 +738,7 @@ namespace lab3
         }
         void Calculating(double a, double b, double n,double alpha)
         {
-
+            //перегрузка попереднього методу для лінійної функції, так як там є додатковий параметер
             double MaxV = Program.Func(b), MinV = Program.Func(a);
             double temp;
             double step = (b - a) / (n - 1);
@@ -777,17 +777,6 @@ namespace lab3
 
         private void Form1_Load(object sender, EventArgs e)
         {
-
-        }
-    }
-    class Pt
-    {
-        public double X { get; set; }
-        public double Y { get; set; }
-        public Pt(double x, double y)
-        {
-            X = x;
-            Y = y;
         }
     }
 }
