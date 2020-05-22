@@ -9,14 +9,16 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using Excel = Microsoft.Office.Interop.Excel;
+using System.Drawing.Imaging;
+
 namespace lab4
 {
 
     public partial class Form1 : Form
-    {
+    {//Ініціалізація всіх змінних
         Font drawFont = new Font("Arial", 8);
         SolidBrush drawBrush = new SolidBrush(Color.Black);
-        List<double> digitsX = new List<double>();
+        PointF[] curvePoints;
         List<int> digitsY = new List<int>();
         // For Drawing
         Pen pen = new Pen(Color.Black,1);
@@ -24,14 +26,15 @@ namespace lab4
         Graphics graphics;
         BufferedGraphicsContext bufferedGraphicsContext;
         BufferedGraphics bufferedGraphics;
-        List<Point[]> linesX = new List<Point[]>();
-        List<Point[]> linesY = new List<Point[]>();
+        List<PointF[]> linesX = new List<PointF[]>();
+        List<PointF[]> linesY = new List<PointF[]>();
         List<Point[]> lines = new List<Point[]>();
         //
+        bool bool_ok = false;
         double a1;
         double b1;
         int n1;
-        //double alpha;
+        double alpha;
         List<Pt>[] graph_pts = new List<Pt>[2];
         int SizeX = 800;
         int SizeY = 600;
@@ -41,7 +44,6 @@ namespace lab4
         TextBox[] N = new TextBox[2];
         TextBox[] Min = new TextBox[2];
         TextBox[] Max = new TextBox[2];
-        Chart[] chart = new Chart[2];
         PictureBox[] pictureBox = new PictureBox[2];
         Button Ok = new Button();
         Label x = new Label();
@@ -60,18 +62,16 @@ namespace lab4
         RadioButton[] RadioButtons = new RadioButton[4];
         Label parameter = new Label();
         TextBox _parameter = new TextBox();
+
         //int index;
         int current;
-        private void InitializeGraphics()
+        private void InitializeGraphics() // ініціалізація графіки для буферу
         {
             graphics = panel.CreateGraphics();
             bufferedGraphicsContext = new BufferedGraphicsContext();
             bufferedGraphics = bufferedGraphicsContext.Allocate(graphics, new Rectangle(0, 0, panel.Width, panel.Height));
-            //graphics[1] = panel[1].CreateGraphics();
-            //bufferedGraphicsContext[1] = new BufferedGraphicsContext();
-            //bufferedGraphics[1] = bufferedGraphicsContext[1].Allocate(graphics[1], new Rectangle(0, 0, panel[1].Width, panel[1].Height));
         }
-        private void DrawToBuffer()
+        private void DrawToBuffer() // функція яка рисує
         {
             bufferedGraphics.Graphics.Clear(Color.White);
             foreach(var line in lines)
@@ -84,8 +84,9 @@ namespace lab4
             for (int i = 0; i < linesX.Count; i++)
             {
                 bufferedGraphics.Graphics.DrawLine(pen, linesX[i][0].X, linesX[i][0].Y, linesX[i][1].X, linesX[i][1].Y);
-                bufferedGraphics.Graphics.DrawString("" + digitsX[i], drawFont, drawBrush, linesX[i][0].X + 5, linesX[i][1].Y + panel.Width / 30);
             }
+            if(curvePoints.Length > 2)
+            bufferedGraphics.Graphics.DrawLines(new Pen(Color.Red, 1), curvePoints);
             bufferedGraphics.Render();
         }
         public Form1()
@@ -95,13 +96,10 @@ namespace lab4
             Text = "lab4";
             MaximizeBox = true;
             ClientSize = new Size(SizeX, SizeY);
-            MenuItem miNewCalc = new MenuItem("Reset",
-                new EventHandler(OnMenuStart), Shortcut.F2);
-            MenuItem miSeparator = new MenuItem("-");
             MenuItem miExit = new MenuItem("Exit",
                 new EventHandler(OnMenuExit), Shortcut.CtrlX);
             MenuItem miCalc = new MenuItem("&Menu",
-                new MenuItem[] { miNewCalc, miSeparator, miExit });
+                new MenuItem[] {  miExit });
             MenuItem SaveChart = new MenuItem("SaveChart", new EventHandler(OnSaveChart));
             MenuItem SaveData = new MenuItem("SaveData", new EventHandler(OnSaveData));
             MenuItem GetData = new MenuItem("GetData", new EventHandler(OnGetData));
@@ -118,7 +116,6 @@ namespace lab4
                 N[i] = new TextBox();
                 Min[i] = new TextBox();
                 Max[i] = new TextBox();
-                chart[i] = new Chart();
                 pictureBox[i] = new PictureBox();
                 _grid[i] = new Button();
                 grid_bool[i] = false;
@@ -166,6 +163,7 @@ namespace lab4
             _data[1].Columns[1].ReadOnly = true;
 
 
+            Controls.Add(panel);
             //A1  = new TextBox();
             A[0].Location = new Point(ClientSize.Width - ClientSize.Width * 4 / 5, ClientSize.Height);
             A[0].AutoSize = false;
@@ -247,88 +245,49 @@ namespace lab4
             _Min.Width = 30;
             _Min.Location = new Point(Min[0].Left + Min[0].Width / 2 - _Min.Width / 2, Min[0].Top - Min[0].Height / 2);
             _Min.Text = "Min";
+            panel = new Panel()
+            {
+                Location = new Point(0, 0),
+                Size = new Size(ClientSize.Width - (ClientSize.Width - _data[0].Location.X), ClientSize.Height - (ClientSize.Height - A[0].Location.Y) - ClientSize.Height / 12),
+                BackColor = Color.White
+            };
+            x.Width = 23;
+            x.Text = "X";
+            x.Location = new Point(panel.Width - x.Width, panel.Height - x.Height);
+            x.BackColor = Color.White;
 
+            y.Width = 23;
+            y.Text = "Y";
+            y.Location = new Point(y.Width / 2, y.Height / 2);
+            y.BackColor = Color.White;
+            Controls.Add(y);
+            Controls.Add(x);
+            Controls.Add(panel);
 
-            chart[0].Size = new Size(ClientSize.Width - (ClientSize.Width - _data[0].Location.X), ClientSize.Height - (ClientSize.Height - A[0].Location.Y) - ClientSize.Height / 12);
-            chart[0].ChartAreas.Add("1");
-            chart[0].Series.Add("X");
-            chart[0].BackColor = Color.White;
-            chart[0].ChartAreas[0].AxisX.MajorGrid.Enabled = false;
-            chart[0].ChartAreas[0].AxisY.MajorGrid.Enabled = false;
-            chart[1].Size = new Size(ClientSize.Width - (ClientSize.Width - _data[1].Location.X), ClientSize.Height - (ClientSize.Height - A[1].Location.Y) - ClientSize.Height / 12);
-            chart[1].ChartAreas.Add("1");
-            chart[1].Series.Add("X");
-            chart[1].BackColor = Color.White;
-            chart[1].ChartAreas[0].AxisX.MajorGrid.Enabled = false;
-            chart[1].ChartAreas[0].AxisY.MajorGrid.Enabled = false;
-            chart[0].MouseWheel += new MouseEventHandler(chart1_MouseWheel);
-            chart[1].MouseWheel += new MouseEventHandler(chart1_MouseWheel);
-            Ok.Location = new Point(chart[0].Width, chart[0].Height);
+            Ok.Location = new Point(panel.Width, panel.Height);
 
             Ok.Size = new Size(ClientSize.Width - Ok.Location.X, ClientSize.Height - Ok.Location.Y);
             Ok.Font = new Font("Arial", (int)Math.Sqrt(Ok.Height * Ok.Width) * 3 / 11, FontStyle.Bold);
             Ok.Text = "Ok";
             Ok.Click += new EventHandler(OnOkClick);
 
-            _grid[0].Location = new Point(chart[0].Width - ClientSize.Width / 5, chart[0].Height + ClientSize.Height / 40);
+            _grid[0].Location = new Point(panel.Width - ClientSize.Width / 5, panel.Height + ClientSize.Height / 40);
             _grid[0].Size = new Size(ClientSize.Width / 12, ClientSize.Height / 20);
             _grid[0].Text = "Grid: OFF";
             _grid[0].Click += new EventHandler(OnGridClick);
-            _grid[1].Location = new Point(chart[1].Width - ClientSize.Width / 5, chart[1].Height + ClientSize.Height / 41);
+            _grid[1].Location = new Point(panel.Width - ClientSize.Width / 5, panel.Height + ClientSize.Height / 41);
             _grid[1].Size = new Size(ClientSize.Width / 12, ClientSize.Height / 20);
             _grid[1].Text = "Grid: OFF";
             _grid[1].Click += new EventHandler(OnGridClick);
 
 
-            _scaling.Width = 70;
-            _scaling.Height = ClientSize.Height * 23 / 600;
-            _scaling.Location = new Point(_grid[0].Location.X - _scaling.Width / 2, _grid[0].Location.Y + _grid[0].Height + ClientSize.Height / 40);
-            _scaling.Text = "scaling 10%";
-            _scalingplus[0].Location = new Point(_scaling.Right + ClientSize.Width / 80, _scaling.Location.Y - ClientSize.Width / 150);
-            _scalingplus[0].Size = new Size(_scaling.Height, _scaling.Height);
-            _scalingplus[0].Text = "+";
-            _scalingplus[0].Click += new EventHandler(OnPlusClick);
-            _scalingminus[0].Location = new Point(_scalingplus[0].Right + ClientSize.Width / 80, _scaling.Location.Y - ClientSize.Width / 150);
-            _scalingminus[0].Size = new Size(_scaling.Height, _scaling.Height);
-            _scalingminus[0].Text = "-";
-            _scalingminus[0].Click += new EventHandler(OnMinusClick);
-            _scalingplus[1].Location = new Point(_scaling.Right + ClientSize.Width / 80, _scaling.Location.Y - ClientSize.Width / 150);
-            _scalingplus[1].Size = new Size(_scaling.Height, _scaling.Height);
-            _scalingplus[1].Text = "+";
-            _scalingplus[1].Click += new EventHandler(OnPlusClick);
-            _scalingminus[1].Location = new Point(_scalingplus[1].Right + ClientSize.Width / 80, _scaling.Location.Y - ClientSize.Width / 150);
-            _scalingminus[1].Size = new Size(_scaling.Height, _scaling.Height);
-            _scalingminus[1].Text = "-";
-            _scalingminus[1].Click += new EventHandler(OnMinusClick);
-
 
 
             ClientSizeChanged += new EventHandler(OnSizeChanged);
-            pictureBox[0].Image = Image.FromFile("C:\\WinForms/lab3/f1.png");
-            pictureBox[0].Top = 0;
-            pictureBox[0].Size = new Size(ClientSize.Width - ClientSize.Width * 3 / 4, ClientSize.Height / 10);
-            pictureBox[0].Left = ClientSize.Width - pictureBox[0].Width;
-            pictureBox[0].SizeMode = PictureBoxSizeMode.StretchImage;
-            pictureBox[1].Image = Image.FromFile("C:\\WinForms/lab3/f2.png");
-            pictureBox[1].Top = 3;
-            pictureBox[1].Size = new Size(ClientSize.Width - ClientSize.Width * 3 / 4, ClientSize.Height / 13);
-            pictureBox[1].Left = ClientSize.Width - pictureBox[1].Width;
-            pictureBox[1].SizeMode = PictureBoxSizeMode.StretchImage;
 
 
             current = 0;
 
-            x.Width = 23;
-            x.Text = "X";
-            x.Location = new Point(chart[0].Width - x.Width, chart[0].Height - x.Height);
-            x.BackColor = Color.White;
-            x.ForeColor = Color.White;
-
-            y.Width = 23;
-            y.Text = "Y";
-            y.Location = new Point(y.Width / 2, y.Height / 2);
-            y.BackColor = Color.White;
-            y.ForeColor = Color.White;
 
 
             Controls.Add(A[0]);
@@ -342,32 +301,22 @@ namespace lab4
             Controls.Add(Min[0]);
             Controls.Add(_Min);
             Controls.Add(_data[0]);
-            Controls.Add(y);
-            Controls.Add(x);
             Controls.Add(Ok);
 
-            // chart1.Legends[0].Docking = System.Windows.Forms.DataVisualization.Charting.Docking.Bottom;
-            //Controls.Add(chart[0]);
             Controls.Add(_grid[0]);
             Controls.Add(pictureBox[0]);
-            chart[0].Invalidate();
 
-            panel = new Panel()
-            {
-                Location = new Point(0, 0),
-                Size = new Size(ClientSize.Width - (ClientSize.Width - _data[0].Location.X), ClientSize.Height - (ClientSize.Height - A[0].Location.Y) - ClientSize.Height / 12),
-                BackColor = Color.White
-            };
-            Controls.Add(panel);
+
 
 
             InitializeGraphics();
             #endregion
             
-         }
+         } // конструктор, у якому оголошуються усі змінні та додаються на форму
 
         private void OnLinear(object sender, EventArgs e)
         {
+            bool_ok = false;
             Controls.Clear();
             Controls.Add(A[0]);
             Controls.Add(_a);
@@ -382,20 +331,15 @@ namespace lab4
             Controls.Add(_data[0]);
             Controls.Add(y);
             Controls.Add(x);
+            Controls.Add(panel);
             Controls.Add(Ok);
-
-            // chart1.Legends[0].Docking = System.Windows.Forms.DataVisualization.Charting.Docking.Bottom;
-            //Controls.Add(chart[0]);
             Controls.Add(_grid[0]);
             Controls.Add(pictureBox[0]);
             current = 0;
-        }
-        private void MyChart()
+        }  // функція, яка стирає усі Controls і до додає потрібні для лінійного графіка елементи Controls
+        private void OnParametric(object sender, EventArgs e) // функція, яка стирає усі Controls і до додає потрібні для параметричного графіка елементи Controls
         {
-
-        }
-        private void OnParametric(object sender, EventArgs e)
-        {
+            bool_ok = false;
             Controls.Clear();
             Controls.Add(A[1]);
             Controls.Add(_a);
@@ -411,8 +355,7 @@ namespace lab4
             Controls.Add(y);
             Controls.Add(x);
             Controls.Add(Ok);
-
-            //Controls.Add(chart[1]);
+            Controls.Add(panel);
             Controls.Add(_grid[1]);
             Controls.Add(pictureBox[1]);
             current = 1;
@@ -436,18 +379,18 @@ namespace lab4
             RadioButtons[0].Checked = true;
             parameter.Text = "a";
             parameter.Width = 10;
-            parameter.Location = new Point(chart[0].Width - ClientSize.Width / 5, _scaling.Bottom + ClientSize.Height / 50);
+            parameter.Location = new Point(panel.Width - ClientSize.Width / 5, _scaling.Bottom + ClientSize.Height / 50);
             _parameter.Location = new Point(parameter.Right + ClientSize.Width / 50, _scaling.Bottom + ClientSize.Height / 50 - parameter.Height / 6);
             _parameter.Width = 40;
             Controls.Add(parameter);
             Controls.Add(_parameter);
 
-        }
+        } 
 
-        private void radioButton_CheckedChanged(object sender, EventArgs e)
+        private void radioButton_CheckedChanged(object sender, EventArgs e) // ловить зміну радіобатона і змінює віповідні надписи координат
         {
             _data[1].Rows.Clear();
-            chart[1].Series["X"].Points.Clear();
+            //chart[1].Series["X"].Points.Clear();
             switch ((sender as RadioButton).Name)
             {
                 case "0":
@@ -477,10 +420,16 @@ namespace lab4
             }
         }
 
-        private void OnSaveChart(object sender, EventArgs e)
+        private void OnSaveChart(object sender, EventArgs e) // збереження графіку у файл
         {
-            chart[0].SaveImage("C:\\WinForms/lab3/chart.png", ChartImageFormat.Png);
+            Image bmp = new Bitmap(panel.Width, panel.Height);
+            var gg = Graphics.FromImage(bmp);
+            var rect = RectangleToScreen(new Rectangle(0, 0, panel.Width, panel.Height));
+            gg.CopyFromScreen(rect.Location, Point.Empty, panel.Size);
+            bmp.Save("C:\\WinForms/lab4/chart.png", ImageFormat.Png);
+
         }
+
         private void OnSaveData(object sender, EventArgs e)
         {
             // creating Excel Application  
@@ -511,14 +460,14 @@ namespace lab4
                 }
             }
             // save the application  
-            workbook.SaveAs("C:\\WinForms/lab3/SaveData.xlsx", Type.Missing, Type.Missing, Type.Missing, Type.Missing, Type.Missing, Microsoft.Office.Interop.Excel.XlSaveAsAccessMode.xlExclusive, Type.Missing, Type.Missing, Type.Missing, Type.Missing);
+            workbook.SaveAs("C:\\WinForms/lab4/SaveData.xlsx", Type.Missing, Type.Missing, Type.Missing, Type.Missing, Type.Missing, Microsoft.Office.Interop.Excel.XlSaveAsAccessMode.xlExclusive, Type.Missing, Type.Missing, Type.Missing, Type.Missing);
             // Exit from the application  
             app.Quit();
-        }
-        private void OnGetData(object sender, EventArgs e)
+        } // збереження данних у файл ексель
+        private void OnGetData(object sender, EventArgs e) //зчитування данних з файлу ексель
         {
             Excel.Application ObjWorkExcel = new Excel.Application(); //открыть эксель
-            Excel.Workbook ObjWorkBook = ObjWorkExcel.Workbooks.Open("C:\\WinForms/lab3/GetData.xlsx", Type.Missing, Type.Missing, Type.Missing, Type.Missing, Type.Missing, Type.Missing, Type.Missing, Type.Missing, Type.Missing, Type.Missing, Type.Missing, Type.Missing, Type.Missing, Type.Missing); //открыть файл
+            Excel.Workbook ObjWorkBook = ObjWorkExcel.Workbooks.Open("C:\\WinForms/lab4/GetData.xlsx", Type.Missing, Type.Missing, Type.Missing, Type.Missing, Type.Missing, Type.Missing, Type.Missing, Type.Missing, Type.Missing, Type.Missing, Type.Missing, Type.Missing, Type.Missing, Type.Missing); //открыть файл
             Excel.Worksheet ObjWorkSheet = (Excel.Worksheet)ObjWorkBook.Sheets[1]; //получить 1 лист
             A[current].Text = ObjWorkSheet.Cells[1, 2].Value.ToString();
             B[current].Text = ObjWorkSheet.Cells[2, 2].Value.ToString();
@@ -530,167 +479,121 @@ namespace lab4
             GC.Collect(); // убрать за собой
 
         }
-
-        private void OnMinusClick(object sender, EventArgs e)
-        {
-            chart[current].ChartAreas[0].InnerPlotPosition.Width -= (int)chart[current].ChartAreas[0].InnerPlotPosition.Width * ((float)0.1);
-            chart[current].Invalidate();
-        }
-
-        private void OnPlusClick(object sender, EventArgs e)
-        {
-            if (chart[current].ChartAreas[0].InnerPlotPosition.Width * 1.1 > 100) return;
-            chart[current].ChartAreas[0].InnerPlotPosition.Width *= (float)1.1;
-            chart[current].Invalidate();
-        }
-        private void chart1_MouseWheel(object sender, MouseEventArgs e)
-        {
-            var chart = (Chart)sender;
-            var xAxis = chart.ChartAreas[0].AxisX;
-            var yAxis = chart.ChartAreas[0].AxisY;
-
-            try
-            {
-                if (e.Delta < 0) // Scrolled down.
-                {
-                    xAxis.ScaleView.ZoomReset();
-                    yAxis.ScaleView.ZoomReset();
-                }
-                else if (e.Delta > 0) // Scrolled up.
-                {
-                    var xMin = xAxis.ScaleView.ViewMinimum;
-                    var xMax = xAxis.ScaleView.ViewMaximum;
-                    var yMin = yAxis.ScaleView.ViewMinimum;
-                    var yMax = yAxis.ScaleView.ViewMaximum;
-
-                    var posXStart = xAxis.PixelPositionToValue(e.Location.X) - (xMax - xMin) / 4;
-                    var posXFinish = xAxis.PixelPositionToValue(e.Location.X) + (xMax - xMin) / 4;
-                    var posYStart = yAxis.PixelPositionToValue(e.Location.Y) - (yMax - yMin) / 4;
-                    var posYFinish = yAxis.PixelPositionToValue(e.Location.Y) + (yMax - yMin) / 4;
-
-                    xAxis.ScaleView.Zoom(posXStart, posXFinish);
-                    yAxis.ScaleView.Zoom(posYStart, posYFinish);
-                }
-            }
-            catch { }
-        }
         private void OnGridClick(object sender, EventArgs e)
         {
             if (grid_bool[current] == false)
             {
                 grid_bool[current] = true;
                 _grid[current].Text = "Grid: ON";
-                chart[current].ChartAreas[0].AxisX.MajorGrid.Enabled = true;
-                chart[current].ChartAreas[0].AxisY.MajorGrid.Enabled = true;
             }
             else
             {
-                grid_bool[current] = false;
-                _grid[current].Text = "Grid: OFF";
-                chart[current].ChartAreas[0].AxisX.MajorGrid.Enabled = false;
-                chart[current].ChartAreas[0].AxisY.MajorGrid.Enabled = false;
+                  grid_bool[current] = false;
+                  _grid[current].Text = "Grid: OFF";
             }
-        }
+            if (bool_ok == true)
+                DrawGraph();
+        } // для виводу/забирання сітки
 
-        private void OnOkClick(object sender, EventArgs e)
+        private void OnOkClick(object sender, EventArgs e) // Ок - запуск обчислення і побудова графіка
         {
-            lines.Add(new Point[] { new Point(panel.Left + panel.Width / 12, panel.Top + panel.Height / 20), new Point(panel.Left + panel.Width / 12, panel.Bottom - panel.Height / 24) });
-            lines.Add(new Point[] { new Point(panel.Left + panel.Width / 14, panel.Bottom - panel.Height / 20), new Point(panel.Right - panel.Width / 24, panel.Bottom - panel.Height / 20) });
-
-            
-
-            A[0].Text = "-5";
-            B[0].Text = "5";
-            N[0].Text = "2";
             #region
-            //Controls.Add(_scaling);
-            //Controls.Add(_scalingplus[current]);
-            //Controls.Add(_scalingminus[current]);
+            if (current == 0)
+            {
+                try
+                {
+                    a1 = Convert.ToDouble(A[current].Text.Replace('.', ','));
+                    b1 = Convert.ToDouble(B[current].Text.Replace('.', ','));
+                    n1 = Convert.ToInt32(N[current].Text.Replace('.', ','));
+                }
+                catch
+                {
+                    MessageBox.Show("Невірні dані!");
+                    return;
+                }
+                if (a1 > b1)
+                {
+                    MessageBox.Show("a<b !");
+                    return;
+                }
+                if (n1 < 1)
+                {
+                    MessageBox.Show("n<1 !");
+                    return;
+                }
+                bool_ok = true;
+                x.ForeColor = Color.Black;
+                y.ForeColor = Color.Black;
+                _data[current].Rows.Clear();
+                graph_pts[current].Clear();
+                Calculating(a1, b1, n1);
+                _data[current].ClearSelection();
+                if ((_data[current].Rows.Count + 1) * _data[current].Rows[0].Height > _data[current].Height)
+                {
+                    _data[current].Columns[0].Width = _data[current].Width / 2 - 10;
+                    _data[current].Columns[1].Width = _data[current].Width / 2 - 10;
+                }
+                else
+                {
+                    _data[current].Columns[0].Width = _data[current].Width / 2 - 2;
+                    _data[current].Columns[1].Width = _data[current].Width / 2 - 2;
+                }
 
-            try
-            {
-                a1 = Convert.ToDouble(A[current].Text.Replace('.', ','));
-                b1 = Convert.ToDouble(B[current].Text.Replace('.', ','));
-                n1 = Convert.ToInt32(N[current].Text.Replace('.', ','));
-            }
-            catch
-            {
-                MessageBox.Show("Невірні дані!");
-                return;
-            }
-            if (a1 > b1)
-            {
-                MessageBox.Show("a<b !");
-                return;
-            }
-            if (n1 < 1)
-            {
-                MessageBox.Show("n<1 !");
-                return;
-            }
-            //if (current == 1)
-            //{
-            //    try
-            //    {
-            //        alpha = Convert.ToDouble(_parameter.Text.Replace('.', ','));
-            //        if (alpha <= 0)
-            //        {
-            //            MessageBox.Show("a<=0!");
-            //            return;
-            //        }
-            //    }
-            //    catch
-            //    {
-            //        MessageBox.Show("a - невірне число");
-            //        return;
-            //    }
-            //}
-            x.ForeColor = Color.Black;
-            y.ForeColor = Color.Black;
-            //chart[current].Series["X"].Points.Clear();
-            //Int32 selectedCellCount = _data[current].GetCellCount(DataGridViewElementStates.Selected);
-            //if (selectedCellCount > 0)
-            //{
-            //    for (int i = 0; i < selectedCellCount; i++)
-            //    {
-            //        index = int.Parse(_data[current].SelectedCells[i].RowIndex.ToString());
-            //        graph_pts[current].Add(new Pt(double.Parse(_data[current].Rows[index].Cells[0].Value.ToString()), double.Parse(_data[current].Rows[index].Cells[1].Value.ToString())));
-            //    }
-            //}
-            //else
-            //{
-            //    _data[current].Rows.Clear();
-            //    if (current == 0)
-            //        Calculating(a1, b1, n1);
-            //    else Calculating(a1, b1, n1, alpha);
-            //}
-            //chart[current].Series["X"].ChartType = System.Windows.Forms.DataVisualization.Charting.SeriesChartType.Line;
-            //chart[current].Series["X"].XValueType = ChartValueType.Double;
-            //chart[current].Series["X"].YValueType = ChartValueType.Double;
-            Calculating(a1, b1, n1);
-            _data[current].ClearSelection();
-            if ((_data[current].Rows.Count + 1) * _data[current].Rows[0].Height > _data[current].Height)
-            {
-                _data[current].Columns[0].Width = _data[current].Width / 2 - 10;
-                _data[current].Columns[1].Width = _data[current].Width / 2 - 10;
             }
             else
             {
-                _data[current].Columns[0].Width = _data[current].Width / 2 - 2;
-                _data[current].Columns[1].Width = _data[current].Width / 2 - 2;
+                try
+                {
+                    a1 = Convert.ToDouble(A[current].Text.Replace('.', ','));
+                    b1 = Convert.ToDouble(B[current].Text.Replace('.', ','));
+                    n1 = Convert.ToInt32(N[current].Text.Replace('.', ','));
+                    alpha = Convert.ToDouble(_parameter.Text.Replace('.', ','));
+                }
+                catch
+                {
+                    MessageBox.Show("Невірні dані!");
+                    return;
+                }
+                if (a1 > b1)
+                {
+                    MessageBox.Show("a<b !");
+                    return;
+                }
+                if (n1 < 1)
+                {
+                    MessageBox.Show("n<1 !");
+                    return;
+                }
+                if (alpha < 0)
+                {
+                    MessageBox.Show("alpha < 0 !");
+                    return;
+                }
+                bool_ok = true;
+                x.ForeColor = Color.Black;
+                y.ForeColor = Color.Black;
+                _data[current].Rows.Clear();
+                graph_pts[current].Clear();
+                Calculating(a1, b1, n1, alpha);
+                _data[current].ClearSelection();
+                if ((_data[current].Rows.Count + 1) * _data[current].Rows[0].Height > _data[current].Height)
+                {
+                    _data[current].Columns[0].Width = _data[current].Width / 2 - 10;
+                    _data[current].Columns[1].Width = _data[current].Width / 2 - 10;
+                }
+                else
+                {
+                    _data[current].Columns[0].Width = _data[current].Width / 2 - 2;
+                    _data[current].Columns[1].Width = _data[current].Width / 2 - 2;
+                }
             }
-            DrawToBuffer();
-            //for (int i = 0; i < graph_pts[current].Count; i++)
-            //{
-            //    chart[current].Series["X"].Points.AddXY(graph_pts[current][i].X, graph_pts[current][i].Y);
-            //}
-            //chart[current].Invalidate();
-            //graph_pts[current].Clear();
             #endregion
         }
 
-        private void OnSizeChanged(object sender, EventArgs e)
+        private void OnSizeChanged(object sender, EventArgs e) // для адаптипної сторінки
         {
+           
+
             SizeX = Width;
             SizeY = Height;
             pictureBox[current].Top = 0;
@@ -743,24 +646,10 @@ namespace lab4
             _Min.Location = new Point(Min[current].Left + Min[current].Width / 2 - _Min.Width / 2, Min[current].Top - Min[current].Height / 2);
 
 
-            if (ClientSize.Width == 0)
-            {
-                chart[current].Size = new Size(ClientSize.Width - (ClientSize.Width - _data[current].Location.X) + 40, ClientSize.Height - (ClientSize.Height - A[current].Location.Y) - ClientSize.Height / 12 + 1);
-            }
-            else
-            {
-                chart[current].Size = new Size(ClientSize.Width - (ClientSize.Width - _data[current].Location.X), ClientSize.Height - (ClientSize.Height - A[current].Location.Y) - ClientSize.Height / 12 + 1);
-            }
-            chart[current].Update();
 
-            x.Location = new Point(chart[current].Width - x.Width, chart[current].Height - x.Height);
-            y.Location = new Point(y.Width / 2, y.Height / 2);
-            Ok.Location = new Point(chart[current].Width, chart[current].Height);
-            Ok.Size = new Size(ClientSize.Width - Ok.Location.X, ClientSize.Height - Ok.Location.Y);
-            Ok.Font = new Font("Arial", (int)Math.Sqrt(Ok.Height * Ok.Width) * 3 / 11 + 1, FontStyle.Bold);
+            
 
-            _grid[current].Location = new Point(chart[current].Width - ClientSize.Width / 5, chart[current].Height + ClientSize.Height / 40);
-            _grid[current].Size = new Size(ClientSize.Width / 12, ClientSize.Height / 20);
+
 
             _scaling.Location = new Point(_grid[current].Location.X - _scaling.Width / 2, _grid[current].Location.Y + _grid[current].Height + ClientSize.Height / 40);
             _scaling.Height = ClientSize.Height * 23 / 600;
@@ -780,10 +669,19 @@ namespace lab4
                 RadioButtons[i].Location = new Point(pictureBox[1].Left + i * RadioButtons[i].Width + ClientSize.Width / 30, pictureBox[1].Bottom + ClientSize.Height / 60);
 
             }
+            panel.Size = new Size(ClientSize.Width - (ClientSize.Width - _data[0].Location.X), ClientSize.Height - (ClientSize.Height - A[0].Location.Y) - ClientSize.Height / 12);
+            Ok.Location = new Point(panel.Width, panel.Height);
+            Ok.Size = new Size(ClientSize.Width - Ok.Location.X, ClientSize.Height - Ok.Location.Y);
+            Ok.Font = new Font("Arial", (int)Math.Sqrt(Ok.Height * Ok.Width) * 3 / 11 + 1, FontStyle.Bold);
+            x.Location = new Point(panel.Width - x.Width, panel.Height - x.Height);
+            y.Location = new Point(y.Width / 2, y.Height / 2);
+            _grid[current].Location = new Point(panel.Width - ClientSize.Width / 5, panel.Height + ClientSize.Height / 40);
+            _grid[current].Size = new Size(ClientSize.Width / 12, ClientSize.Height / 20);
+            if(bool_ok == true)
+            DrawGraph();
         }
         void Calculating(double a, double b, int n)
         {
-
             double MaxV = Program.Func(b), MinV = Program.Func(a);
             double temp;
             double step = (b - a) / (n - 1);
@@ -797,31 +695,53 @@ namespace lab4
             }
             Max[current].Text = "" + MaxV;
             Min[current].Text = "" + MinV;
+            DrawGraph();
+        } // функція для обчислень значень функцій
+        private void DrawGraph() // обчислює точки координат для побудови графіка і викликає функцію Draw()
+        {
+            lines.Clear();
+            linesX.Clear();
+            linesY.Clear();
+            bufferedGraphics = bufferedGraphicsContext.Allocate(graphics, new Rectangle(0, 0, panel.Width, panel.Height));
+            lines.Add(new Point[] { new Point(panel.Left + panel.Width / 12, panel.Top + panel.Height / 20), new Point(panel.Left + panel.Width / 12, panel.Bottom - panel.Height / 24) });
+            lines.Add(new Point[] { new Point(panel.Left + panel.Width / 14, panel.Bottom - panel.Height / 20), new Point(panel.Right - panel.Width / 24, panel.Bottom - panel.Height / 20) });
 
-            int countY = Math.Abs((int)MaxV + 1 -((int)MinV - 1))+1;
+            double MaxV = double.Parse(Max[current].Text);
+            double MinV = double.Parse(Min[current].Text);
+            float zero = 0;
+            int n = graph_pts[current].Count;
+            int countY = Math.Abs((int)MaxV + 1 - ((int)MinV - 1)) + 1;
             MinV = (int)MinV - 1;
             int lengthY = lines[0][1].Y - lines[0][0].Y;
-            int LengthX = lines[1][1].X - lines[1][0].X;
+            int LengthX = lines[1][1].X - lines[0][0].X;
+            curvePoints = new PointF[n];
             for (int i = 0; i < countY; i++)
             {
-                linesY.Add(new Point[] { new Point(lines[0][0].X - panel.Width / 30, lines[1][0].Y - lengthY/(countY-1)*i), new Point(lines[0][0].X, lines[1][0].Y  - lengthY / (countY-1) * i) });
+                linesY.Add(new PointF[] { new PointF(lines[0][0].X - (float)panel.Width / 30, lines[1][0].Y - (float)(lengthY / (countY - 1)) * i), new PointF(lines[0][0].X, lines[1][0].Y - (float)(lengthY / (countY - 1)) * i) });
+                if (MinV == 0)
+                    zero = linesY[i][0].Y;
                 digitsY.Add((int)MinV++);
             }
             if (n > 1)
             {
                 for (int i = 0; i < n; i++)
                 {
-                    linesX.Add(new Point[] { new Point(lines[1][0].X + (LengthX / (n - 1) * i), lines[1][0].Y + panel.Width / 30), new Point(lines[1][0].X + (LengthX / (n - 1) * i), lines[1][0].Y) });
-                    digitsX.Add(graph_pts[current][i].X);
+                    linesX.Add(new PointF[] { new PointF(lines[0][0].X + ((float)LengthX / (n - 1) * i), lines[1][0].Y), new PointF(lines[0][0].X + ((float)LengthX / (n - 1) * i), lines[1][0].Y + panel.Width / 70) });
+                    curvePoints[i] = new PointF(linesX[i][0].X, (float)(zero + graph_pts[current][i].Y * (linesY[1][0].Y - linesY[0][0].Y)));
                 }
             }
-            chart[current].ChartAreas["1"].AxisX.Minimum = a;
-            chart[current].ChartAreas["1"].AxisX.Interval = step;
-            chart[current].ChartAreas["1"].AxisX.Maximum = b;
-            chart[current].ChartAreas["1"].AxisY.Minimum = (int)MinV - 1;
-            chart[current].ChartAreas["1"].AxisY.Interval = 1;
-            chart[current].ChartAreas["1"].AxisY.Maximum = (int)MaxV + 1;
-
+            if(grid_bool[current] == true)
+            {
+                foreach(PointF[] i in linesY)
+                {
+                    i[1].X = lines[1][1].X;
+                }
+                foreach (PointF[] i in linesX)
+                {
+                    i[0].Y = lines[0][0].Y;
+                }
+            }
+            DrawToBuffer();
         }
         void Calculating(double a, double b, double n, double alpha)
         {
@@ -845,18 +765,9 @@ namespace lab4
             }
             Max[current].Text = "" + MaxV;
             Min[current].Text = "" + MinV;
-            chart[current].ChartAreas["1"].AxisX.Minimum = a;
-            chart[current].ChartAreas["1"].AxisX.Interval = step;
-            chart[current].ChartAreas["1"].AxisX.Maximum = b;
-            chart[current].ChartAreas["1"].AxisY.Minimum = (int)MinV - 1;
-            chart[current].ChartAreas["1"].AxisY.Interval = 1;
-            chart[current].ChartAreas["1"].AxisY.Maximum = (int)MaxV + 1;
-
+            DrawGraph();
         }
-        private void OnMenuStart(object obj, EventArgs ea)
-        {
 
-        }
         private void OnMenuExit(object obj, EventArgs ea)
         {
             Close();
@@ -867,14 +778,5 @@ namespace lab4
 
         }
     }
-    class Pt
-    {
-        public double X { get; set; }
-        public double Y { get; set; }
-        public Pt(double x, double y)
-        {
-            X = x;
-            Y = y;
-        }
-    }
+   
 }
