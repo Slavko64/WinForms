@@ -262,12 +262,12 @@ namespace lab3
 
 
             ClientSizeChanged += new EventHandler(OnSizeChanged);
-            pictureBox[0].Image = Image.FromFile("C:\\WinForms/lab3/f1.png");
+            pictureBox[0].Image = Image.FromFile("../../f1.png");
             pictureBox[0].Top = 0;
             pictureBox[0].Size = new Size(ClientSize.Width - ClientSize.Width*3 / 4, ClientSize.Height / 10);
             pictureBox[0].Left = ClientSize.Width - pictureBox[0].Width;
             pictureBox[0].SizeMode = PictureBoxSizeMode.StretchImage;
-            pictureBox[1].Image = Image.FromFile("C:\\WinForms/lab3/f2.png");
+            pictureBox[1].Image = Image.FromFile("../../f2.png");
             pictureBox[1].Top = 3;
             pictureBox[1].Size = new Size(ClientSize.Width - ClientSize.Width * 3 / 4, ClientSize.Height / 13);
             pictureBox[1].Left = ClientSize.Width - pictureBox[1].Width;
@@ -422,7 +422,7 @@ namespace lab3
 
         private void OnSaveChart(object sender, EventArgs e)
         {//збереження графіку у файл
-            chart[0].SaveImage("C:\\WinForms/lab3/chart.png", ChartImageFormat.Png);
+            chart[0].SaveImage("../../chart.png", ChartImageFormat.Png);
         }
         private void OnSaveData(object sender, EventArgs e)
         {//збереження данних у ексель файл
@@ -433,7 +433,7 @@ namespace lab3
             // creating new Excelsheet in workbook  
             Excel._Worksheet worksheet = null;
             // see the excel sheet behind the program  
-            app.Visible = true;
+            //app.Visible = true;
             // get the reference of first sheet. By default its name is Sheet1.  
             // store its reference to worksheet  
             worksheet = workbook.Sheets["Лист1"];
@@ -762,7 +762,7 @@ namespace lab3
             chart[current].ChartAreas["1"].AxisX.Interval = step;
             chart[current].ChartAreas["1"].AxisX.Maximum = b;
             chart[current].ChartAreas["1"].AxisY.Minimum = (int)MinV - 1;
-            chart[current].ChartAreas["1"].AxisY.Interval = 1;
+            chart[current].ChartAreas["1"].AxisY.Interval = ((int)MaxV - (int)MinV)/50;
             chart[current].ChartAreas["1"].AxisY.Maximum = (int)MaxV + 1;
 
         }

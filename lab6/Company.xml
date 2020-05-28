@@ -1,0 +1,27 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE collection [
+  <!ELEMENT collection (company+)>
+  <!ELEMENT company (name,surname,post,salary,adress)>
+  <!ATTLIST company id CDATA #REQUIRED>
+  <!ELEMENT name (#PCDATA)>
+  <!ELEMENT surname (#PCDATA)>
+  <!ELEMENT post (#PCDATA)>
+  <!ELEMENT salary (#PCDATA)>
+  <!ELEMENT address (#PCDATA)>
+]>
+<collection>
+  <company id="0">
+    <name>Yaroslav</name>
+    <surname>Rybak</surname>
+    <post>Director</post>
+    <salary>10000000</salary>
+    <address>Wall str.</address>
+  </company>
+  <company id="1">
+    <name>Nazar</name>
+    <surname>Stamplevskiy</surname>
+    <post>Programmer</post>
+    <salary>100</salary>
+    <address>Random str</address>
+  </company>
+</collection>

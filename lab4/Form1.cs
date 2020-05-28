@@ -283,7 +283,17 @@ namespace lab4
 
 
 
-            ClientSizeChanged += new EventHandler(OnSizeChanged);
+           ClientSizeChanged += new EventHandler(OnSizeChanged);
+            pictureBox[0].Image = Image.FromFile("C:\\WinForms/lab3/f1.png");
+            pictureBox[0].Top = 0;
+            pictureBox[0].Size = new Size(ClientSize.Width - ClientSize.Width*3 / 4, ClientSize.Height / 10);
+            pictureBox[0].Left = ClientSize.Width - pictureBox[0].Width;
+            pictureBox[0].SizeMode = PictureBoxSizeMode.StretchImage;
+            pictureBox[1].Image = Image.FromFile("C:\\WinForms/lab3/f2.png");
+            pictureBox[1].Top = 3;
+            pictureBox[1].Size = new Size(ClientSize.Width - ClientSize.Width * 3 / 4, ClientSize.Height / 13);
+            pictureBox[1].Left = ClientSize.Width - pictureBox[1].Width;
+            pictureBox[1].SizeMode = PictureBoxSizeMode.StretchImage;
 
 
             current = 0;
@@ -379,8 +389,8 @@ namespace lab4
             RadioButtons[0].Checked = true;
             parameter.Text = "a";
             parameter.Width = 10;
-            parameter.Location = new Point(panel.Width - ClientSize.Width / 5, _scaling.Bottom + ClientSize.Height / 50);
-            _parameter.Location = new Point(parameter.Right + ClientSize.Width / 50, _scaling.Bottom + ClientSize.Height / 50 - parameter.Height / 6);
+            parameter.Location = new Point(panel.Width - ClientSize.Width / 5, _grid[1].Bottom + ClientSize.Height / 50);
+            _parameter.Location = new Point(parameter.Right + ClientSize.Width / 50, _grid[1].Bottom + ClientSize.Height / 50 - parameter.Height / 6);
             _parameter.Width = 40;
             Controls.Add(parameter);
             Controls.Add(_parameter);
@@ -426,7 +436,7 @@ namespace lab4
             var gg = Graphics.FromImage(bmp);
             var rect = RectangleToScreen(new Rectangle(0, 0, panel.Width, panel.Height));
             gg.CopyFromScreen(rect.Location, Point.Empty, panel.Size);
-            bmp.Save("C:\\WinForms/lab4/chart.png", ImageFormat.Png);
+            bmp.Save("../../chart.png", ImageFormat.Png);
 
         }
 
@@ -660,8 +670,7 @@ namespace lab4
             _scalingminus[current].Size = new Size(_scaling.Height, _scaling.Height);
             _scalingminus[current].TextAlign = ContentAlignment.MiddleCenter;
 
-            parameter.Location = new Point(_grid[1].Left, _scaling.Bottom + ClientSize.Height / 50);
-            _parameter.Location = new Point(parameter.Right + ClientSize.Width / 50, _scaling.Bottom + ClientSize.Height / 50 - parameter.Height / 6);
+
 
             for (int i = 0; i < 4; i++)
             {
@@ -677,8 +686,10 @@ namespace lab4
             y.Location = new Point(y.Width / 2, y.Height / 2);
             _grid[current].Location = new Point(panel.Width - ClientSize.Width / 5, panel.Height + ClientSize.Height / 40);
             _grid[current].Size = new Size(ClientSize.Width / 12, ClientSize.Height / 20);
-            if(bool_ok == true)
-            DrawGraph();
+            parameter.Location = new Point(panel.Width - ClientSize.Width / 5, _grid[1].Bottom + ClientSize.Height / 50);
+            _parameter.Location = new Point(parameter.Right + ClientSize.Width / 50, _grid[1].Bottom + ClientSize.Height / 50 - parameter.Height / 6);
+            if (bool_ok == true)
+                DrawGraph();
         }
         void Calculating(double a, double b, int n)
         {
@@ -710,7 +721,11 @@ namespace lab4
             double MinV = double.Parse(Min[current].Text);
             float zero = 0;
             int n = graph_pts[current].Count;
-            int countY = Math.Abs((int)MaxV + 1 - ((int)MinV - 1)) + 1;
+            int countY;
+            if (current == 0)
+                countY = Math.Abs((int)MaxV + 1 - ((int)MinV - 1)) + 1;
+            else
+                countY = Math.Abs((int)MaxV - ((int)MinV))/50;
             MinV = (int)MinV - 1;
             int lengthY = lines[0][1].Y - lines[0][0].Y;
             int LengthX = lines[1][1].X - lines[0][0].X;
@@ -726,8 +741,15 @@ namespace lab4
             {
                 for (int i = 0; i < n; i++)
                 {
-                    linesX.Add(new PointF[] { new PointF(lines[0][0].X + ((float)LengthX / (n - 1) * i), lines[1][0].Y), new PointF(lines[0][0].X + ((float)LengthX / (n - 1) * i), lines[1][0].Y + panel.Width / 70) });
-                    curvePoints[i] = new PointF(linesX[i][0].X, (float)(zero + graph_pts[current][i].Y * (linesY[1][0].Y - linesY[0][0].Y)));
+                    try
+                    {
+                        linesX.Add(new PointF[] { new PointF(lines[0][0].X + ((float)LengthX / (n - 1) * i), lines[1][0].Y), new PointF(lines[0][0].X + ((float)LengthX / (n - 1) * i), lines[1][0].Y + panel.Width / 70) });
+                        curvePoints[i] = new PointF(linesX[i][0].X, (float)(zero + graph_pts[current][i].Y * (linesY[1][0].Y - linesY[0][0].Y)));
+                    }
+                    catch
+                    {
+                        continue;
+                    }
                 }
             }
             if(grid_bool[current] == true)
