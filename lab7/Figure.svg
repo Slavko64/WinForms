@@ -1,0 +1,27 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg x="0" y="0" width="1000" height="1000" overflow="hidden" viewBox="0, 0, 1000, 1000" preserveAspectRatio="xMidYMid" font-size="0" xml:space="default" xml="http://www.w3.org/XML/1998/namespace" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:xml="http://www.w3.org/XML/1998/namespace" version="1.1">
+  <defs xml:space="default">
+    <linearGradient y2="0%" gradientUnits="objectBoundingBox" id="Gradient1" xml:space="default">
+      <stop offset="17%" stop-color="red" xml:space="default" class="red" />
+      <stop offset="34%" stop-color="orange" xml:space="default" class="orange" />
+      <stop offset="51%" stop-color="yellow" xml:space="default" class="yellow" />
+      <stop offset="68%" stop-color="green" xml:space="default" class="green" />
+      <stop offset="80%" stop-color="blue" xml:space="default" class="blue" />
+      <stop offset="100%" stop-color="purple" xml:space="default" class="purple" />
+    </linearGradient>
+    <style xml:space="default" type="text/css">
+        #ball { fill: url(#Gradient1); }
+        .red { stop-color: red; }
+        .orange { stop-color: orange; }
+        .yellow { stop-color: yellow; }
+        .green { stop-color: green; }
+        .blue { stop-color: blue; }
+        .purple { stop-color: purple; }
+      </style>
+  </defs>
+  <rect x="50" y="50" width="250" height="250" id="ball" xml:space="default" style="fill:url(#Gradient1);">
+    <animate xml:space="default" attributeName="rx" values="0;125;0" dur="5s" repeatCount="indefinite" />
+    <animateTransform xml:space="default" attributeName="transform" attributeType="XML" type="rotate" from="0 175 175" to="360 175 175" dur="10s" repeatCount="indefinite" />
+  </rect>
+</svg>
